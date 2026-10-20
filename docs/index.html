@@ -1,11 +1,102 @@
 <!doctype html>
-<html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"><title>Lustro • Analiza samooceny</title><link rel="stylesheet" href="style.css"><script src="vendor/xlsx.full.min.js" defer></script><script src="example.js" defer></script><script src="model.js" defer></script><script src="quiz-engine.js" defer></script><script src="questions.js" defer></script><script src="knowledge-model.js" defer></script><script src="app.js" defer></script><script src="knowledge.js" defer></script><script src="persistence.js" defer></script></head>
+<html lang="pl"><head>
+<meta charset="utf-8">
+<script id="app-sound-control-script">
+/* App sound control: local to this document; no system volume changes. */
+(() => {
+  if (window.appSoundControl) return;
+  const key = 'app-sound-muted:' + location.pathname.replace(/[^/]*$/, '');
+  let muted = false;
+  try { muted = localStorage.getItem(key) === '1'; } catch (_) {}
+  const media = new Set(), buses = new Set();
+  const previous = new WeakMap();
+  function applyMedia(el) {
+    media.add(el);
+    if (muted) {
+      if (!previous.has(el)) previous.set(el, el.muted);
+      el.muted = true;
+    } else if (previous.has(el)) {
+      el.muted = previous.get(el); previous.delete(el);
+    }
+  }
+  const play = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function (...args) { applyMedia(this); return play.apply(this, args); };
+  const NativeAudio = window.Audio;
+  window.Audio = new Proxy(NativeAudio, { construct(Target, args) { const el = Reflect.construct(Target, args); applyMedia(el); return el; } });
+  // Route generated effects through a gain bus, leaving decoding and timing intact.
+  if (window.AudioNode) {
+    const connect = AudioNode.prototype.connect;
+    const disconnect = AudioNode.prototype.disconnect;
+    const contextBuses = new WeakMap();
+    function busFor(destination) {
+      let bus = contextBuses.get(destination.context);
+      if (!bus) {
+        bus = destination.context.createGain(); bus.gain.value = muted ? 0 : 1;
+        connect.call(bus, destination); contextBuses.set(destination.context, bus); buses.add(bus);
+      }
+      return bus;
+    }
+    AudioNode.prototype.connect = function (destination, ...args) {
+      if (destination && destination === this.context.destination && !(window.OfflineAudioContext && this.context instanceof OfflineAudioContext)) {
+        const result = connect.call(this, busFor(destination), ...args);
+        return result === undefined ? result : destination;
+      }
+      return connect.call(this, destination, ...args);
+    };
+    AudioNode.prototype.disconnect = function (...args) {
+      if (args[0] === this.context.destination && contextBuses.has(this.context)) args[0] = contextBuses.get(this.context);
+      return disconnect.apply(this, args);
+    };
+  }
+  let button;
+  function render() {
+    if (!button) return;
+    button.textContent = muted ? '🔇' : '🔊';
+    button.title = button.getAttribute('aria-label') || '';
+    button.setAttribute('aria-label', muted ? 'Włącz dźwięk w aplikacji' : 'Wycisz dźwięk w aplikacji');
+    button.title = button.getAttribute('aria-label');
+    button.setAttribute('aria-pressed', String(muted));
+  }
+  function setMuted(value) {
+    muted = !!value;
+    document.querySelectorAll('audio,video').forEach(applyMedia);
+    media.forEach(applyMedia);
+    buses.forEach(bus => { bus.gain.value = muted ? 0 : 1; });
+    try { localStorage.setItem(key, muted ? '1' : '0'); } catch (_) {}
+    render();
+  }
+  window.appSoundControl = { get muted() { return muted; }, setMuted };
+  function mount() {
+    const style = document.createElement('style');
+    style.textContent = '#appSoundToggle{position:fixed!important;bottom:max(14px,env(safe-area-inset-bottom))!important;left:max(14px,env(safe-area-inset-left))!important;z-index:2147483647!important;width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;border:1px solid #ffffff66!important;border-radius:50%!important;background:#182333!important;color:#fff!important;box-shadow:0 2px 10px #0005!important;font:22px/1 system-ui!important;display:grid!important;place-items:center!important;cursor:pointer!important;opacity:.92}#appSoundToggle:hover{opacity:1}#appSoundToggle:focus-visible{outline:3px solid #ffce43!important;outline-offset:3px!important}@media print{#appSoundToggle{display:none!important}}';
+    document.head.appendChild(style);
+    button = document.createElement('button'); button.id = 'appSoundToggle'; button.type = 'button';
+    button.onclick = () => setMuted(!muted);
+    document.body.appendChild(button); render();
+    document.querySelectorAll('audio,video').forEach(applyMedia);
+    new MutationObserver(records => records.forEach(record => record.addedNodes.forEach(node => {
+      if (node.nodeType !== 1) return;
+      if (node.matches('audio,video')) applyMedia(node);
+      node.querySelectorAll('audio,video').forEach(applyMedia);
+    }))).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('volumechange', event => { if (muted && event.target instanceof HTMLMediaElement && !event.target.muted) event.target.muted = true; }, true);
+    document.addEventListener('fullscreenchange', () => {
+      const host = document.fullscreenElement;
+      if (host && !host.matches('video,audio')) host.appendChild(button);
+      else document.body.appendChild(button);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once: true }); else mount();
+})();
+
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png"><title>Lustro • Analiza samooceny</title><link rel="stylesheet" href="style.css"><script src="vendor/xlsx.full.min.js" defer></script><script src="example.js" defer></script><script src="model.js" defer></script><script src="quiz-engine.js" defer></script><script src="questions.js" defer></script><script src="knowledge-model.js" defer></script><script src="app.js" defer></script><script src="knowledge.js" defer></script><script src="persistence.js" defer></script></head>
 <body><header><a class="brand" href="#"><img src="assets/app-icon.png" alt="" width="44" height="44"> <span>LUSTRO<small>ANKIETY O DEZINFORMACJI</small></span></a><div class="header-actions"><button id="csv">Eksport danych CSV</button><button id="print">Drukuj / zapisz PDF ↗</button></div></header>
 <main><section class="intro"><div><p class="eyebrow">WIEDZA W NASZYCH OCZACH</p><h1>Jak oceniamy<br>siebie i innych?</h1><p class="lead">Zobacz, jak ankietowani oceniają swoją umiejętność rozpoznawania dezinformacji. Porównaj perspektywy oraz odpowiedzi przed i po spotkaniu.</p></div><div class="mirror" aria-hidden="true"><span>JA</span><div>◐</div><span>INNI</span></div></section>
-<section class="upload-panel" id="drop"><div><h2>Dodaj ankiety do analizy</h2><p>Przeciągnij pliki XLSX lub CSV. Możesz dodać kilka spotkań i porównywać ich wyniki.</p><small>Dane są analizowane i zapisywane lokalnie na tym urządzeniu. Wczytane pliki nie są wysyłane na serwer. „Usuń wszystkie dane” czyści zapisaną analizę.</small></div><div><label class="primary upload-button" for="files">＋ Wczytaj pliki</label><input id="files" type="file" accept=".xlsx,.xls,.csv" multiple><button id="example">Zobacz przykład demonstracyjny</button></div></section>
+<section class="upload-panel three-files"><h2>Wczytaj trzy osobne pliki</h2><p>Jeden plik z chmury oraz dwa pliki z quizu: PRZED i PO. Każdy ma własne pole poniżej.</p><div class="upload-cards"><div class="upload-card" id="drop"><h3>1. Chmura / samoocena</h3><p>Eksport z chmury: odpowiedzi otwarte i ocena siebie oraz innych. Jeden XLSX może zawierać oba pomiary.</p><label class="primary upload-button" for="files">＋ Wczytaj plik z chmury</label><input id="files" type="file" accept=".xlsx,.xls,.csv" multiple><button id="example">Przykład demonstracyjny</button></div><div class="upload-card"><h3>2. Quiz PRZED</h3><p>Osobny plik z odpowiedziami na test wiedzy przed spotkaniem.</p><label class="file-label" for="quiz-before">Wybierz plik quizu PRZED</label><input type="file" id="quiz-before" accept=".csv,.xlsx,.xls"><div id="quiz-before-settings"></div></div><div class="upload-card"><h3>3. Quiz PO</h3><p>Osobny plik z odpowiedziami na test wiedzy po spotkaniu.</p><label class="file-label" for="quiz-after">Wybierz plik quizu PO</label><input type="file" id="quiz-after" accept=".csv,.xlsx,.xls"><div id="quiz-after-settings"></div></div></div><small>Dane są analizowane i zapisywane lokalnie na tym urządzeniu. Wczytane pliki nie są wysyłane na serwer. „Usuń wszystkie dane” czyści zapisaną analizę.</small><div id="quiz-status" role="status" aria-live="polite"></div><div id="quiz-errors" role="alert"></div></section>
 <div id="status" role="status" aria-live="polite"></div><div id="errors" role="alert"></div><div id="sources" class="sources"></div>
 <section class="filters" aria-label="Filtry analizy"><label>Źródło<select id="source"><option value="">Wszystkie pliki</option></select></label><label>Miejsce spotkania<select id="place"><option value="">Wszystkie miejsca</option></select></label><label>Data spotkania<select id="survey-date"><option value="">Wszystkie daty</option></select></label><label>Pomiar<select id="stage"><option value="">PRZED i PO</option><option>PRZED</option><option>PO</option></select></label><button id="clear">Usuń wszystkie dane</button></section>
-<section class="panel knowledge-panel" id="knowledge-panel"><p class="eyebrow">TEST WIEDZY + SAMOOCENA + OBRAZ PODATNOŚCI</p><h2>Co wiemy, a co o sobie sądzimy?</h2><p class="subtle">Dodaj eksporty testu „Emocje i dezinformacja” (7 pytań). Wyniki testu analizujemy osobno, a następnie zestawiamy z ankietą wybranej grupy.</p><div class="two-col quiz-imports"><div><h3>Test PRZED</h3><label class="file-label">Wczytaj CSV lub XLSX<input type="file" id="quiz-before" accept=".csv,.xlsx,.xls"></label><div id="quiz-before-settings"></div></div><div><h3>Test PO</h3><label class="file-label">Wczytaj CSV lub XLSX<input type="file" id="quiz-after" accept=".csv,.xlsx,.xls"></label><div id="quiz-after-settings"></div></div></div><div id="quiz-status" role="status" aria-live="polite"></div><div id="quiz-errors" role="alert"></div><div id="quiz-results"></div><div class="link-control"><label><input type="checkbox" id="link-confirm"> Potwierdzam: wybrane ankiety i testy pochodzą z tego samego spotkania / tej samej grupy.</label><p class="footnote">W filtrach ankiety wybierz jedno miejsce i jedną datę. Liczebności mogą się różnić. Samo potwierdzenie nie łączy konkretnych osób.</p></div><div id="combined-results"></div><details class="answer-key"><summary>Klucz testu i kontrola przypisania kolumn</summary><div id="quiz-key"></div></details></section><div id="empty" class="empty"><span>↥</span><h2>Każda odpowiedź to inna perspektywa.</h2><p>Wczytaj swój pierwszy plik lub otwórz przykład, aby zobaczyć analizę.</p></div>
+<section class="panel knowledge-panel" id="knowledge-panel"><p class="eyebrow">TEST WIEDZY + SAMOOCENA + OBRAZ PODATNOŚCI</p><h2>Co wiemy, a co o sobie sądzimy?</h2><p class="subtle">Dodaj eksporty testu „Emocje i dezinformacja” (7 pytań). Wyniki testu analizujemy osobno, a następnie zestawiamy z ankietą wybranej grupy.</p><div id="quiz-results"></div><div class="link-control"><label><input type="checkbox" id="link-confirm"> Potwierdzam: wybrane ankiety i testy pochodzą z tego samego spotkania / tej samej grupy.</label><p class="footnote">W filtrach ankiety wybierz jedno miejsce i jedną datę. Liczebności mogą się różnić. Samo potwierdzenie nie łączy konkretnych osób.</p></div><div id="combined-results"></div><details class="answer-key"><summary>Klucz testu i kontrola przypisania kolumn</summary><div id="quiz-key"></div></details></section><div id="empty" class="empty"><span>↥</span><h2>Każda odpowiedź to inna perspektywa.</h2><p>Wczytaj swój pierwszy plik lub otwórz przykład, aby zobaczyć analizę.</p></div>
 <div id="results" hidden><div class="section-heading"><h2>Obraz grupy</h2><p id="scope"></p></div><section id="metrics" class="metrics"></section>
 <section class="panel"><div class="section-heading"><div><p class="eyebrow">01 / ROZKŁAD ODPOWIEDZI</p><h2>„Ja potrafię” a „inni potrafią”</h2></div><span class="subtle">Pełna skala odpowiedzi • liczby i procenty</span></div><div id="legend" class="legend"></div><div id="distributions"></div><p class="footnote">Procenty odnoszą się do rozpoznanych odpowiedzi na dane pytanie. Braki i wartości spoza skali pokazujemy osobno. Wartości po zaokrągleniu mogą nie sumować się do 100%.</p></section>
 <section class="two-col"><article class="panel"><p class="eyebrow">02 / DWA SPOJRZENIA</p><h2>Czy oceniamy siebie wyżej?</h2><p class="subtle">Porównanie dwóch odpowiedzi tej samej osoby w obrębie jednego pomiaru.</p><div id="relative"></div></article><article class="panel"><p class="eyebrow">03 / PRZED → PO</p><h2>Co zmienia się w grupie?</h2><div id="change"></div></article></section>
