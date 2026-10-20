@@ -1,0 +1,14 @@
+(function(root){
+'use strict';
+function dayKey(value){let s=String(value??'').trim(),m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'Brak daty'}
+function score(file,questions,engine,selectedDate,manual={}){
+ const map=engine.mapping(file,questions,manual),bad=map.some(m=>m.column<0||m.conflict);const time=file.header.findIndex(h=>/^(sygnatura|czas|timestamp|znacznik)/.test(engine.norm(h)));
+ const all=file.rows.filter(r=>map.some(m=>m.column>=0&&String(r.values[m.column]??'').trim())),dates=[...new Set(all.map(r=>dayKey(r.values[time])))].sort();
+ const rows=all.filter(r=>selectedDate==='*'||dayKey(r.values[time])===selectedDate),counts=questions.map(()=>0),unknown=[],seen=new Set(),accepted=[],hist=Array(questions.length+1).fill(0);let incomplete=0,duplicates=0,missing=0;
+ if(!bad)for(const r of rows){let signature=JSON.stringify([r.values[time],...map.map(m=>r.values[m.column])]);if(time>=0&&r.values[time]&&seen.has(signature)){duplicates++;continue}seen.add(signature);let points=0,blanks=0,un=[];const answers=map.map((m,i)=>engine.matchAnswer(r.values[m.column],questions[i].options,questions[i].answerAliases));answers.forEach((a,i)=>{if(a.blank)blanks++;if(a.unknown)un.push({row:r.row,question:i,value:r.values[map[i].column]});if(a.index===questions[i].correct)points++});if(un.length){unknown.push(...un);continue}answers.forEach((a,i)=>{if(a.index===questions[i].correct)counts[i]++});if(blanks)incomplete++;missing+=blanks;hist[points]++;accepted.push({...r,points});}
+ const n=accepted.length,total=accepted.reduce((s,r)=>s+r.points,0);return{map,bad,dates,time,totalRows:all.length,selectedRows:rows.length,n,total,average:n?total/n:null,pct:n?total/n/questions.length*100:null,counts,hist,incomplete,missing,duplicates,unknown,excludedUnknown:new Set(unknown.map(u=>u.row)).size,accepted};
+}
+const categories=r=>String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);
+function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),selected=coded.filter(r=>categories(r).includes(label));return{n:selected.length,base:coded.length,pct:coded.length?selected.length/coded.length*100:null,self:survey.stats(selected,'self')}}
+root.KnowledgeModel={dayKey,score,categories,categoryStats};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
+})(typeof window==='undefined'?globalThis:window);
