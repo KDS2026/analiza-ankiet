@@ -29,7 +29,7 @@ function mapping(file,questions,manual={}){
 function matchAnswer(value,options,aliases=[]){
  const v=clean(value);if(!v)return {index:-1,blank:true};const letter=v.match(/^([A-D])\s*(?:[).:\-]\s*(.*))?$/i);
  if(letter&&!letter[2])return {index:letter[1].toUpperCase().charCodeAt(0)-65};
- const text=v.replace(/^[A-D]\s*[).:\-]\s*/i,''),n=norm(text),hits=options.map((o,i)=>(norm(o)===n||norm(aliases[i]??'')===n)?i:-1).filter(i=>i>=0);
+ const text=v.replace(/^[A-D]\s*[).:\-]\s*/i,''),n=norm(text),hits=options.map((o,i)=>{const aa=Array.isArray(aliases[i])?aliases[i]:[aliases[i]];return norm(o)===n||aa.some(a=>a!=null&&norm(a)===n)?i:-1}).filter(i=>i>=0);
  if(hits.length===1)return {index:hits[0],moved:!!letter&&letter[1].toUpperCase().charCodeAt(0)-65!==hits[0]};
  return {index:-1,unknown:true};
 }
