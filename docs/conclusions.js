@@ -51,6 +51,18 @@ function inferenceText(qs,sets){
  if(age.every(s=>s.pct!==null)&&age[1].pct-age[0].pct<-3)parts.push(`Rzadsze wiązanie podatności z wiekiem (${fmt(age[1].pct-age[0].pct)} p.p.) wskazuje na osłabienie stereotypu, że dezinformacja dotyczy przede wszystkim określonych grup wiekowych.`);
  return parts.join(' ');
 }
+function recommendationItems(qs,sets){
+ const items=[
+  'Przekazać szkole krótkie podsumowanie ewaluacji z wynikami PRZED i PO oraz omówić z dyrekcją lub koordynującym nauczycielem najważniejsze zmiany.',
+  'Zachęcić nauczycieli do dalszego podejmowania tematu dezinformacji podczas lekcji, godzin wychowawczych i rozmów o bieżących treściach z internetu.',
+  'Przesłać szkole krótkie materiały dla uczniów: listę kroków weryfikacji informacji, przykłady sprawdzania źródeł oraz pytania pomocne przed udostępnieniem treści.',
+  'Przekazać gotowe infografiki do wywieszenia w gazetce szkolnej i udostępnienia w kanałach używanych przez szkołę, aby najważniejsze zasady pozostały widoczne po warsztatach.'
+ ];
+ if(qs[1]?.n&&!qs[1].bad&&!qs[1].unknown.length){const rates=qs[1].counts.map(n=>n/qs[1].n*100),min=Math.min(...rates),j=rates.indexOf(min);items.splice(1,0,`W materiałach uzupełniających położyć szczególny nacisk na zagadnienie: „${qs[1].questions[j].question}” — w pomiarze PO poprawnie odpowiedziało ${fmt(min)}% uczestników.`)}
+ const all=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M));if(all.every(s=>s.pct!==null)&&all[1].pct>all[0].pct)items.push('W dalszych działaniach utrwalać wniosek, że na dezinformację może być podatny każdy, a odporność zależy od nawyków sprawdzania informacji, nie od wieku czy przynależności do określonej grupy.');
+ items.push('Jeżeli szkoła będzie kontynuowała temat, po kilku tygodniach można przeprowadzić krótki test przypominający, aby sprawdzić, które treści zostały utrwalone.');
+ return items;
+}
 function renderConclusions(){
  const dest=$('conclusions');if(!dest)return;
  const rows=filtered(),sets=phaseNames.map(st=>stageRows(rows,st)),qs=[currentQuiz(0),currentQuiz(1)];
@@ -89,7 +101,8 @@ function renderConclusions(){
  if(qs.some(s=>s?.n))limits.push(`test: ${qs[0]?.n||0} PRZED i ${qs[1]?.n||0} PO`);
  const confirmed=$('link-confirm')?.checked;
  const context=confirmed?'Dane dotyczą tych samych warsztatów i tej samej grupy uczestników.':'Aby połączyć wyniki w jedną ewaluację, potwierdź wyżej, że pliki dotyczą tych samych warsztatów i tej samej grupy.';
- dest.innerHTML=`<div class="conclusion-grid">${cards.map(([title,body])=>`<article class="conclusion-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('')}</div><p class="conclusion-limit"><strong>Podstawa ewaluacji:</strong> ${esc(limits.join('; '))}. ${esc(context)} Różne liczebności oznaczają liczbę odpowiedzi otrzymanych w poszczególnych narzędziach i pomiarach.</p>`;
+ const recommendations=rows.length?recommendationItems(qs,sets):[];
+ dest.innerHTML=`<div class="conclusion-grid">${cards.map(([title,body])=>`<article class="conclusion-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('')}</div>${recommendations.length?`<section class="recommendations"><h3>Zalecenia na przyszłość</h3><p>Proponowane działania po zakończeniu ewaluacji:</p><ul>${recommendations.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></section>`:''}<p class="conclusion-limit"><strong>Podstawa ewaluacji:</strong> ${esc(limits.join('; '))}. ${esc(context)} Różne liczebności oznaczają liczbę odpowiedzi otrzymanych w poszczególnych narzędziach i pomiarach.</p>`;
 }
 const priorRender=render;
 render=function(){priorRender();renderConclusions()};
