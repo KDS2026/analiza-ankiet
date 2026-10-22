@@ -16,7 +16,7 @@ final class LustroApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WK
         webView.uiDelegate = self
         webView.autoresizingMask = [.width, .height]
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 900), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "Lustro — badanie ankiet"
+        window.title = "Ewaluacja warsztatów — Nie daj się zrollować"
         window.minSize = NSSize(width: 720, height: 540)
         window.contentView = webView
         window.center()
@@ -32,9 +32,9 @@ final class LustroApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WK
         let menu = NSMenu()
         let appItem = NSMenuItem(); menu.addItem(appItem)
         let appMenu = NSMenu(); appItem.submenu = appMenu
-        appMenu.addItem(withTitle: "O aplikacji Lustro", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(withTitle: "O aplikacji Badanie ankiet", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Zakończ Lustro", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Zakończ Badanie ankiet", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let fileItem = NSMenuItem(); menu.addItem(fileItem)
         let fileMenu = NSMenu(title: "Plik"); fileItem.submenu = fileMenu
         let printItem = NSMenuItem(title: "Drukuj / zapisz PDF…", action: #selector(printReport), keyEquivalent: "p"); printItem.target = self; fileMenu.addItem(printItem)
