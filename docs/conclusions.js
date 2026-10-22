@@ -31,24 +31,22 @@ function weakestQuestion(qs){
 function inferenceText(qs,sets){
  const parts=[];
  if(qs.every(s=>s?.n)&&quizVersionsMatch(qs)){
-  const delta=qs[1].pct-qs[0].pct;
-  if(delta>3)parts.push(`Wzrost wyniku testu o ${fmt(delta)} p.p. wskazuje, że warsztaty skutecznie zwiększyły wiedzę uczestników o mechanizmach dezinformacji.`);
-  else if(delta<-3)parts.push(`Spadek wyniku testu o ${fmt(Math.abs(delta))} p.p. wskazuje, że sposób przekazania i utrwalenia wiedzy wymaga korekty.`);
-  else parts.push('Wynik testu pozostał zbliżony, dlatego w kolejnych warsztatach warto mocniej utrwalić najtrudniejsze zagadnienia.');
+  const delta=qs[1].pct-qs[0].pct,test=StatTests.mannWhitney(StatTests.quizScores(qs[0]),StatTests.quizScores(qs[1]));
+  if(test?.p<.05&&delta>0)parts.push(`Wynik testu po warsztacie był istotnie wyższy niż przed warsztatem: różnica ${fmt(delta)} p.p., p ${StatTests.pText(test.p)}.`);
+  else if(test?.p<.05&&delta<0)parts.push(`Wynik testu po warsztacie był istotnie niższy niż przed warsztatem: różnica ${fmt(delta)} p.p., p ${StatTests.pText(test.p)}.`);
+  else parts.push(`Wynik testu po warsztacie różnił się o ${signed(delta)} p.p.; jest to tendencja wymagająca potwierdzenia na większej próbie (p = ${test?StatTests.pText(test.p):'—'}).`);
   const changes=Q.map((_,j)=>({j,d:qs[1].counts[j]/qs[1].n*100-qs[0].counts[j]/qs[0].n*100})),down=[...changes].sort((a,b)=>a.d-b.d)[0],up=[...changes].sort((a,b)=>b.d-a.d)[0];
-  if(up.d>5)parts.push(`Największy postęp dotyczy pytania ${up.j+1} (+${fmt(up.d)} p.p.), co pokazuje, że ten mechanizm został szczególnie dobrze przyswojony.`);
-  if(down.d<-5)parts.push(`Pytanie ${down.j+1} zanotowało spadek (${fmt(down.d)} p.p.), więc zagadnienie „${qs[1].questions[down.j].question}” powinno zostać wyraźniej wyjaśnione lub powtórzone.`);
+  if(up.d>5){const r=StatTests.fisher(qs[0].counts[up.j],qs[0].n-qs[0].counts[up.j],qs[1].counts[up.j],qs[1].n-qs[1].counts[up.j]);parts.push(`Największa różnica dodatnia dotyczy pytania ${up.j+1} (+${fmt(up.d)} p.p.) i ${r.p<.05?'jest istotna statystycznie':'stanowi tendencję wymagającą potwierdzenia na większej próbie'} (p = ${StatTests.pText(r.p)}).`)}
+  if(down.d<-5){const r=StatTests.fisher(qs[0].counts[down.j],qs[0].n-qs[0].counts[down.j],qs[1].counts[down.j],qs[1].n-qs[1].counts[down.j]);parts.push(`W pytaniu ${down.j+1} odsetek poprawnych odpowiedzi był niższy o ${fmt(Math.abs(down.d))} p.p.; ${r.p<.05?'różnica jest istotna statystycznie':'jest to tendencja wymagająca potwierdzenia na większej próbie'} (p = ${StatTests.pText(r.p)}). Zagadnienie „${qs[1].questions[down.j].question}” warto wyraźniej wyjaśnić lub powtórzyć.`)}
  }
- const self=sets.map(s=>M.stats(s,'self')),others=sets.map(s=>M.stats(s,'others'));
- if(self.every(s=>s.pct!==null)){
-  const d=self[1].pct-self[0].pct;if(d>3)parts.push(`Wzrost pozytywnej samooceny o ${fmt(d)} p.p. oznacza, że po zajęciach uczestnicy czują się pewniej w rozpoznawaniu dezinformacji.`);
- }
+ const self=sets.map(s=>M.stats(s,'self')),others=sets.map(s=>M.stats(s,'others')),selfTest=StatTests.mannWhitney(StatTests.ordinal(sets[0],'self'),StatTests.ordinal(sets[1],'self'));
+ if(selfTest){const d=selfTest.afterMean-selfTest.beforeMean;if(selfTest.p<.05)parts.push(`Samoocena na pełnej skali 1–4 była po warsztacie istotnie ${d>0?'wyższa':'niższa'} (średnia ${fmt(selfTest.beforeMean,2)} → ${fmt(selfTest.afterMean,2)}; p ${StatTests.pText(selfTest.p)}).`);else parts.push(`Samoocena na pełnej skali 1–4 zmieniła się ze średniej ${fmt(selfTest.beforeMean,2)} do ${fmt(selfTest.afterMean,2)}; jest to tendencja wymagająca potwierdzenia na większej próbie (p = ${StatTests.pText(selfTest.p)}).`)}
  if(self.every(s=>s.pct!==null)&&others.every(s=>s.pct!==null)){
-  const gap=(self[1].pct-others[1].pct)-(self[0].pct-others[0].pct);if(gap>3)parts.push(`Jednocześnie powiększyła się różnica między oceną siebie i innych, co wskazuje, że uczestnicy przypisują nabyte kompetencje przede wszystkim sobie, a znacznie ostrożniej oceniają społeczeństwo.`);
+  const gap=(self[1].pct-others[1].pct)-(self[0].pct-others[0].pct);if(gap>3)parts.push(`Opisowo powiększyła się różnica między oceną siebie i innych: uczestnicy częściej wysoko oceniali siebie niż społeczeństwo.`);
  }
  const all=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M)),age=sets.map(s=>K.categoryStats(s,'Wiek',M));
- if(all.every(s=>s.pct!==null)&&all[1].pct-all[0].pct>3)parts.push(`Częstsze wskazywanie, że podatny może być każdy (+${fmt(all[1].pct-all[0].pct)} p.p.), świadczy o szerszym rozumieniu powszechności podatności na dezinformację.`);
- if(age.every(s=>s.pct!==null)&&age[1].pct-age[0].pct<-3)parts.push(`Rzadsze wiązanie podatności z wiekiem (${fmt(age[1].pct-age[0].pct)} p.p.) wskazuje na osłabienie stereotypu, że dezinformacja dotyczy przede wszystkim określonych grup wiekowych.`);
+ if(all.every(s=>s.pct!==null)&&all[1].pct-all[0].pct>3){const r=StatTests.fisher(all[0].n,all[0].base-all[0].n,all[1].n,all[1].base-all[1].n);parts.push(`Wskazanie, że podatny może być każdy, było częstsze o ${fmt(all[1].pct-all[0].pct)} p.p.; ${r.p<.05?'różnica jest istotna statystycznie':'jest to tendencja wymagająca potwierdzenia na większej próbie'} (p = ${StatTests.pText(r.p)}).`)}
+ if(age.every(s=>s.pct!==null)&&age[1].pct-age[0].pct<-3){const r=StatTests.fisher(age[0].n,age[0].base-age[0].n,age[1].n,age[1].base-age[1].n);parts.push(`Wiązanie podatności z wiekiem było rzadsze o ${fmt(Math.abs(age[1].pct-age[0].pct))} p.p.; ${r.p<.05?'różnica jest istotna statystycznie':'jest to tendencja wymagająca potwierdzenia na większej próbie'} (p = ${StatTests.pText(r.p)}).`)}
  return parts.join(' ');
 }
 function recommendationItems(qs,sets){
@@ -75,7 +73,10 @@ function renderConclusions(){
  }
  if(rows.length){
   const self=sets.map(s=>M.stats(s,'self')),others=sets.map(s=>M.stats(s,'others'));
-  let body=`${sentenceDelta('Udział pozytywnej samooceny',self.map(s=>s.pct),self.map(s=>s.n))} ${sentenceDelta('Odsetek pozytywnych ocen umiejętności innych',others.map(s=>s.pct),others.map(s=>s.n))}`;
+  const selfTest=StatTests.mannWhitney(StatTests.ordinal(sets[0],'self'),StatTests.ordinal(sets[1],'self')),othersTest=StatTests.mannWhitney(StatTests.ordinal(sets[0],'others'),StatTests.ordinal(sets[1],'others'));
+  let body=selfTest?`Samoocena na pełnej skali 1–4: średnia ${fmt(selfTest.beforeMean,2)} PRZED i ${fmt(selfTest.afterMean,2)} PO. ${StatTests.language(selfTest,'samooceny')} Wielkość efektu: ${fmt(selfTest.effect,2)}, 95% CI [${fmt(selfTest.ci[0],2)}; ${fmt(selfTest.ci[1],2)}]. `:'';
+  if(othersTest)body+=`Ocena umiejętności innych na skali 1–4: średnia ${fmt(othersTest.beforeMean,2)} PRZED i ${fmt(othersTest.afterMean,2)} PO. ${StatTests.language(othersTest,'oceny innych')} `;
+  body+=`Pomocniczo: ${sentenceDelta('udział odpowiedzi „tak” i „raczej tak” dla samooceny',self.map(s=>s.pct),self.map(s=>s.n))}`;
   if(self.every(s=>s.pct!==null)&&others.every(s=>s.pct!==null)){
    const gaps=self.map((s,i)=>s.pct-others[i].pct);
    body+=` Ankietowani oceniali siebie ${gapDescription(gaps[0])} względem innych PRZED (różnica ${signed(gaps[0])} p.p.) i ${gapDescription(gaps[1])} PO (${signed(gaps[1])} p.p.).`;
@@ -103,6 +104,7 @@ function renderConclusions(){
  const context=confirmed?'Dane dotyczą tych samych warsztatów i tej samej grupy uczestników.':'Aby połączyć wyniki w jedną ewaluację, potwierdź wyżej, że pliki dotyczą tych samych warsztatów i tej samej grupy.';
  const recommendations=rows.length?recommendationItems(qs,sets):[];
  dest.innerHTML=`<div class="conclusion-grid">${cards.map(([title,body])=>`<article class="conclusion-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('')}</div>${recommendations.length?`<section class="recommendations"><h3>Zalecenia na przyszłość</h3><p>Proponowane działania po zakończeniu ewaluacji:</p><ul>${recommendations.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></section>`:''}<p class="conclusion-limit"><strong>Podstawa ewaluacji:</strong> ${esc(limits.join('; '))}. ${esc(context)} Różne liczebności oznaczają liczbę odpowiedzi otrzymanych w poszczególnych narzędziach i pomiarach.</p>`;
+ StatTests.render();
 }
 const priorRender=render;
 render=function(){priorRender();renderConclusions()};
