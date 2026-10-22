@@ -73,3 +73,25 @@ footer{align-items:center;background:#fff;max-width:none;margin-top:35px;padding
  table{font-size:6.5px}td,th{padding:3px}.evaluation-meeting{padding:6px 0}.evaluation-satisfaction{gap:6px;margin:5px 0;break-inside:avoid}.evaluation-satisfaction strong{font-size:20px}.evaluation-scale{height:10px}.evaluation-key{gap:5px;font-size:7px;margin:3px 0}.evaluation-key i{width:7px;height:7px}
  footer{padding:2px 0 0;margin-top:2px;gap:6px;break-inside:auto;page-break-inside:auto}.footer-funding img{width:105px}.footer-project{font-size:5.5px;line-height:1.15}
 }
+
+/* Pełny zestaw znaków projektu w nagłówku i stopce */
+.brand,.footer-logos{display:flex;align-items:center;gap:18px;min-width:0}
+.brand img,.footer-logos img{display:block;width:auto;object-fit:contain}
+.brand img{height:100px}
+.footer-logos img{height:92px}
+.brand .ministry-logo,.footer-logos .ministry-logo{width:auto}
+.brand .project-logo,.brand .foundation-logo,.footer-logos .project-logo,.footer-logos .foundation-logo{width:auto}
+.brand-divider{height:70px}
+.footer-logos{flex:1}
+@media(max-width:950px){.brand img{height:72px}.footer-logos img{height:68px}.brand,.footer-logos{gap:10px}.brand-divider{height:50px}}
+@media(max-width:650px){.brand img,.footer-logos img{height:46px}.brand,.footer-logos{gap:6px}.brand-divider{height:34px}footer{align-items:flex-start}.footer-project{font-size:10px}}
+@media print{
+ @page{size:A4 portrait;margin:8mm}
+ .brand,.footer-logos{gap:8px}
+ .brand img{height:58px!important;width:auto!important}
+ .footer-logos img{height:52px!important;width:auto!important}
+ .brand-divider{height:42px}
+ footer{position:static;height:auto;margin-top:4px;padding:5px 0 0;align-items:center}
+ .panel>.eyebrow:first-child,.panel>.eyebrow:first-child+h2,.panel>.eyebrow:first-child+h2+p,.panel>.section-heading:first-child{break-after:avoid!important;page-break-after:avoid!important;-webkit-column-break-after:avoid!important}
+ .panel>.eyebrow:first-child+h2,.panel>.eyebrow:first-child+h2+p{break-before:avoid!important;page-break-before:avoid!important;-webkit-column-break-before:avoid!important}
+}
