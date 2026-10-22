@@ -95,3 +95,25 @@ footer{align-items:center;background:#fff;max-width:none;margin-top:35px;padding
  .panel>.eyebrow:first-child,.panel>.eyebrow:first-child+h2,.panel>.eyebrow:first-child+h2+p,.panel>.section-heading:first-child{break-after:avoid!important;page-break-after:avoid!important;-webkit-column-break-after:avoid!important}
  .panel>.eyebrow:first-child+h2,.panel>.eyebrow:first-child+h2+p{break-before:avoid!important;page-break-before:avoid!important;-webkit-column-break-before:avoid!important}
 }
+
+.comparison-print-heading,.conclusions-print-heading{display:none}
+@media print{
+ .overview-print-block{break-inside:avoid!important;page-break-inside:avoid!important}
+ .comparison-panel>.eyebrow,.comparison-panel>h2{display:none!important}
+ .comparison-print-heading{display:block;break-after:avoid!important;page-break-after:avoid!important}
+ .comparison-print-heading h2{margin-bottom:5px}
+ .conclusions-panel>.eyebrow,.conclusions-panel>h2,.conclusions-panel>h2+.subtle{display:none!important}
+ .conclusions-print-heading{display:block;break-after:avoid!important;page-break-after:avoid!important}
+ .conclusions-print-heading h2{margin-bottom:4px}
+ .conclusions-print-heading .subtle{margin-bottom:5px}
+ .conclusion-grid{display:block!important}
+ .conclusion-card{display:inline-block;width:calc(50% - 4px);margin:0 2px 5px;vertical-align:top;break-inside:avoid!important;page-break-inside:avoid!important}
+ .conclusion-first{break-inside:avoid!important;page-break-inside:avoid!important}
+ #open-self .chart-grid>.paired-chart{width:calc(25% - 5px)}
+ #open-self .paired-chart{padding:5px}
+ #open-self .paired-chart figcaption{font-size:7.5px;margin-bottom:2px}
+ #open-self .paired-plot{margin-top:6px}
+ #open-self .plot-axis,#open-self .bar-space{height:68px}
+ #open-self .bar-columns{background:linear-gradient(var(--line),var(--line)) left top/100% 1px no-repeat,linear-gradient(var(--line),var(--line)) left 34px/100% 1px no-repeat,linear-gradient(var(--line),var(--line)) left 68px/100% 1px no-repeat}
+ #open-self .bar-column>small,#open-self .bar-delta{font-size:5.5px}
+}
