@@ -52,14 +52,41 @@ final class LustroApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WK
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { window.makeKeyAndOrderFront(nil); return true }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) { if message.name == "printReport" { printReport() } }
     @objc func printReport() {
-        webView.evaluateJavaScript("window.preparePrintScope && window.preparePrintScope()") { [weak self] _, _ in
+        let preparePrint = #"""
+        (() => {
+          window.preparePrintScope && window.preparePrintScope();
+          document.getElementById('native-print-css')?.remove();
+          let css = '';
+          for (const sheet of document.styleSheets) {
+            let rules;
+            try { rules = sheet.cssRules; } catch (_) { continue; }
+            for (const rule of rules) {
+              if (rule.type === CSSRule.MEDIA_RULE && rule.conditionText.toLowerCase().includes('print')) {
+                css += Array.from(rule.cssRules, child => child.cssText).join('\n') + '\n';
+              }
+            }
+          }
+          const style = document.createElement('style');
+          style.id = 'native-print-css';
+          style.textContent = css;
+          document.head.appendChild(style);
+          document.documentElement.classList.add('native-printing');
+          return css.length;
+        })()
+        """#
+        webView.evaluateJavaScript(preparePrint) { [weak self] _, _ in
             guard let self else { return }
-            let info = NSPrintInfo.shared
-            info.topMargin = 30; info.bottomMargin = 30; info.leftMargin = 30; info.rightMargin = 30
-            let operation = self.webView.printOperation(with: info)
-            operation.showsPrintPanel = true; operation.showsProgressPanel = true
-            operation.runModal(for: self.window, delegate: nil, didRun: nil, contextInfo: nil)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                let info = NSPrintInfo.shared
+                info.topMargin = 24; info.bottomMargin = 24; info.leftMargin = 24; info.rightMargin = 24
+                let operation = self.webView.printOperation(with: info)
+                operation.showsPrintPanel = true; operation.showsProgressPanel = true
+                operation.runModal(for: self.window, delegate: self, didRun: #selector(self.printOperationDidRun(_:success:contextInfo:)), contextInfo: nil)
+            }
         }
+    }
+    @objc func printOperationDidRun(_ operation: NSPrintOperation, success: Bool, contextInfo: UnsafeMutableRawPointer?) {
+        webView.evaluateJavaScript("document.getElementById('native-print-css')?.remove(); document.documentElement.classList.remove('native-printing')")
     }
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
         let panel = NSOpenPanel(); panel.allowsMultipleSelection = parameters.allowsMultipleSelection; panel.canChooseDirectories = false; panel.canChooseFiles = true
