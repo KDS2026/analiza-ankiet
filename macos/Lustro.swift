@@ -51,7 +51,16 @@ final class LustroApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WK
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { window.makeKeyAndOrderFront(nil); return true }
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) { if message.name == "printReport" { printReport() } }
-    @objc func printReport() { let info = NSPrintInfo.shared; info.topMargin = 30; info.bottomMargin = 30; info.leftMargin = 30; info.rightMargin = 30; let operation = webView.printOperation(with: info); operation.showsPrintPanel = true; operation.showsProgressPanel = true; operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil) }
+    @objc func printReport() {
+        webView.evaluateJavaScript("window.preparePrintScope && window.preparePrintScope()") { [weak self] _, _ in
+            guard let self else { return }
+            let info = NSPrintInfo.shared
+            info.topMargin = 30; info.bottomMargin = 30; info.leftMargin = 30; info.rightMargin = 30
+            let operation = self.webView.printOperation(with: info)
+            operation.showsPrintPanel = true; operation.showsProgressPanel = true
+            operation.runModal(for: self.window, delegate: nil, didRun: nil, contextInfo: nil)
+        }
+    }
     func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
         let panel = NSOpenPanel(); panel.allowsMultipleSelection = parameters.allowsMultipleSelection; panel.canChooseDirectories = false; panel.canChooseFiles = true
         panel.beginSheetModal(for: window) { result in completionHandler(result == .OK ? panel.urls : nil) }
