@@ -28,6 +28,29 @@ function weakestQuestion(qs){
  });
  return result.length?`Najwięcej trudności sprawiło: ${result.join('; ')}.`:'Nie można wskazać najtrudniejszych pytań bez poprawnie ocenionego testu.';
 }
+function inferenceText(qs,sets){
+ const parts=[];
+ if(qs.every(s=>s?.n)&&quizVersionsMatch(qs)){
+  const delta=qs[1].pct-qs[0].pct;
+  if(delta>3)parts.push(`Wzrost wyniku testu o ${fmt(delta)} p.p. wskazuje, że warsztaty skutecznie zwiększyły wiedzę uczestników o mechanizmach dezinformacji.`);
+  else if(delta<-3)parts.push(`Spadek wyniku testu o ${fmt(Math.abs(delta))} p.p. wskazuje, że sposób przekazania i utrwalenia wiedzy wymaga korekty.`);
+  else parts.push('Wynik testu pozostał zbliżony, dlatego w kolejnych warsztatach warto mocniej utrwalić najtrudniejsze zagadnienia.');
+  const changes=Q.map((_,j)=>({j,d:qs[1].counts[j]/qs[1].n*100-qs[0].counts[j]/qs[0].n*100})),down=[...changes].sort((a,b)=>a.d-b.d)[0],up=[...changes].sort((a,b)=>b.d-a.d)[0];
+  if(up.d>5)parts.push(`Największy postęp dotyczy pytania ${up.j+1} (+${fmt(up.d)} p.p.), co pokazuje, że ten mechanizm został szczególnie dobrze przyswojony.`);
+  if(down.d<-5)parts.push(`Pytanie ${down.j+1} zanotowało spadek (${fmt(down.d)} p.p.), więc zagadnienie „${qs[1].questions[down.j].question}” powinno zostać wyraźniej wyjaśnione lub powtórzone.`);
+ }
+ const self=sets.map(s=>M.stats(s,'self')),others=sets.map(s=>M.stats(s,'others'));
+ if(self.every(s=>s.pct!==null)){
+  const d=self[1].pct-self[0].pct;if(d>3)parts.push(`Wzrost pozytywnej samooceny o ${fmt(d)} p.p. oznacza, że po zajęciach uczestnicy czują się pewniej w rozpoznawaniu dezinformacji.`);
+ }
+ if(self.every(s=>s.pct!==null)&&others.every(s=>s.pct!==null)){
+  const gap=(self[1].pct-others[1].pct)-(self[0].pct-others[0].pct);if(gap>3)parts.push(`Jednocześnie powiększyła się różnica między oceną siebie i innych, co wskazuje, że uczestnicy przypisują nabyte kompetencje przede wszystkim sobie, a znacznie ostrożniej oceniają społeczeństwo.`);
+ }
+ const all=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M)),age=sets.map(s=>K.categoryStats(s,'Wiek',M));
+ if(all.every(s=>s.pct!==null)&&all[1].pct-all[0].pct>3)parts.push(`Częstsze wskazywanie, że podatny może być każdy (+${fmt(all[1].pct-all[0].pct)} p.p.), świadczy o szerszym rozumieniu powszechności podatności na dezinformację.`);
+ if(age.every(s=>s.pct!==null)&&age[1].pct-age[0].pct<-3)parts.push(`Rzadsze wiązanie podatności z wiekiem (${fmt(age[1].pct-age[0].pct)} p.p.) wskazuje na osłabienie stereotypu, że dezinformacja dotyczy przede wszystkim określonych grup wiekowych.`);
+ return parts.join(' ');
+}
 function renderConclusions(){
  const dest=$('conclusions');if(!dest)return;
  const rows=filtered(),sets=phaseNames.map(st=>stageRows(rows,st)),qs=[currentQuiz(0),currentQuiz(1)];
@@ -58,6 +81,8 @@ function renderConclusions(){
    cards.push(['Wspólny obraz',`${relation} Test: ${signed(testDelta)} p.p.; samoocena: ${signed(selfDelta)} p.p. Są to uzupełniające się wyniki ewaluacji tej samej grupy uczestników przed i po warsztatach.`]);
   }
  }
+ const inference=rows.length?inferenceText(qs,sets):'';
+ if(inference)cards.push(['Wniosek',inference]);
  if(!cards.length){dest.innerHTML='<p class="subtle">Wczytaj dane, aby otrzymać ocenę opisową.</p>';return}
  const before=sets[0].length,after=sets[1].length,limits=[];
  if(rows.length)limits.push(`ankieta: ${before} odpowiedzi PRZED i ${after} PO`);
