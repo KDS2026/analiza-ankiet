@@ -18,7 +18,7 @@ window.StatTests=(()=>{
  }
  const ordinal=(rows,key)=>rows.map(r=>M.answer(r[key])).map(v=>['nie','raczej nie','raczej tak','tak'].indexOf(v)+1).filter(v=>v>0);
  const quizScores=s=>s?.hist?s.hist.flatMap((n,score)=>Array(n).fill(score)):s?.accepted?.map(r=>r.points)||[];
- const language=(result,noun='wynik')=>{if(!result)return 'Brak danych do testu.';const d=(result.afterMean??0)-(result.beforeMean??0),dir=d>0?'wzrost':d<0?'spadek':'różnicę';return result.p<.05?`Test wskazuje istotny ${dir} ${noun} (p ${pText(result.p)}).`:`Zaobserwowano ${dir} ${noun}, ale wynik nie jest istotny statystycznie (p = ${pText(result.p)}); jest to tendencja wymagająca potwierdzenia na większej próbie.`};
+ const language=(result,noun='wynik')=>{if(!result)return 'Brak danych do testu.';const d=(result.afterMean??0)-(result.beforeMean??0),dir=d>0?'wzrost':d<0?'spadek':'różnicę';return result.p<.05?`Test wskazuje istotny ${dir} ${noun} (p = ${pText(result.p)}).`:`Zaobserwowano ${dir} ${noun}, ale wynik nie jest istotny statystycznie (p = ${pText(result.p)}); jest to tendencja wymagająca potwierdzenia na większej próbie.`};
  const resultHtml=r=>r?`<span>${r.test}; p ${r.p<.001?'&lt; 0,001':'= '+pText(r.p)}</span><span>${r.effectName}: <b>${num(r.effect)}</b>; 95% CI [${num(r.ci[0])}; ${num(r.ci[1])}]</span>`:'<span>Brak danych do obliczenia.</span>';
  function comparisons(rows,qs){
   const sets=phaseNames.map(st=>rows.filter(r=>r.stage===st)),out=[];
