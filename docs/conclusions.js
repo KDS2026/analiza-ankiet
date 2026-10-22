@@ -94,8 +94,10 @@ function renderConclusions(){
    cards.push(['Wspólny obraz',`${relation} Test: ${signed(testDelta)} p.p.; samoocena: ${signed(selfDelta)} p.p. Są to uzupełniające się wyniki ewaluacji tej samej grupy uczestników przed i po warsztatach.`]);
   }
  }
- const inference=rows.length?inferenceText(qs,sets):'';
- if(inference)cards.push(['Wniosek',inference]);
+ const everyone=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M).pct),age=sets.map(s=>K.categoryStats(s,'Wiek',M).pct),confidence=sets.map(s=>M.stats(s,'self').pct);
+ const linked=!!$('link-confirm')?.checked&&uniqueSurveyScope()&&quizDates.every(d=>d===K.dayKey(rows[0]?.time))&&quizVersionsMatch(qs);
+ const interpretation=rows.length?EvaluationInterpretation.describe({everyone,age,self:confidence,test:linked?qs.map(s=>s?.pct??null):null,linked}):[];
+ cards.push(...interpretation);
  if(!cards.length){dest.innerHTML='<p class="subtle">Wczytaj dane, aby otrzymać ocenę opisową.</p>';return}
  const before=sets[0].length,after=sets[1].length,limits=[];
  if(rows.length)limits.push(`ankieta: ${before} odpowiedzi PRZED i ${after} PO`);
