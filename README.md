@@ -1,4 +1,4 @@
-# Badanie ankiet — ewaluacja „Nie daj się zrollować”
+# Raport analityczny projektu Tour de Konstytucja PLUS – Nie daj się zrollować
 
 Analiza samooceny, wiedzy o dezinformacji i otwartych odpowiedzi o podatności. Import ankiet XLSX/CSV i testów PRZED/PO; jawny klucz siedmiu pytań; porównanie grupowe; edycja kategorii; eksport CSV i drukowanie/PDF.
 

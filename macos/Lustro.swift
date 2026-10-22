@@ -16,7 +16,7 @@ final class LustroApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WK
         webView.uiDelegate = self
         webView.autoresizingMask = [.width, .height]
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 900), styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
-        window.title = "Ewaluacja warsztatów — Nie daj się zrollować"
+        window.title = "Raport analityczny projektu Tour de Konstytucja PLUS – Nie daj się zrollować"
         window.minSize = NSSize(width: 720, height: 540)
         window.contentView = webView
         window.center()
