@@ -95,7 +95,8 @@ function renderConclusions(){
   }
  }
  const everyone=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M).pct),age=sets.map(s=>K.categoryStats(s,'Wiek',M).pct),confidence=sets.map(s=>M.stats(s,'self').pct);
- const linked=!!$('link-confirm')?.checked&&uniqueSurveyScope()&&quizDates.every(d=>d===K.dayKey(rows[0]?.time))&&quizVersionsMatch(qs);
+ const surveyDates=selectedSurveyDates(),multiLinked=analysisMode==='multiple'&&surveyDates.length>1&&quizDates.every(d=>d==='@survey'||surveyDates.includes(d));
+ const linked=(multiLinked||!!$('link-confirm')?.checked&&uniqueSurveyScope()&&quizDates.every(d=>d===K.dayKey(rows[0]?.time)))&&quizVersionsMatch(qs);
  const interpretation=rows.length?EvaluationInterpretation.describe({everyone,age,self:confidence,test:linked?qs.map(s=>s?.pct??null):null,linked}):[];
  cards.push(...interpretation);
  if(!cards.length){dest.innerHTML='<p class="subtle">Wczytaj dane, aby otrzymać ocenę opisową.</p>';return}
@@ -106,7 +107,7 @@ function renderConclusions(){
  const context=confirmed?'Dane dotyczą tych samych warsztatów i tej samej grupy uczestników.':'Aby połączyć wyniki w jedną ewaluację, potwierdź wyżej, że pliki dotyczą tych samych warsztatów i tej samej grupy.';
  const recommendations=rows.length?recommendationItems(qs,sets):[];
  const beforeSelf=M.stats(sets[0],'self').pct;
- const researchMismatch=linked&&qs[0]?.pct<50&&beforeSelf>=60&&beforeSelf-qs[0].pct>=15;
+ const researchMismatch=linked&&beforeSelf>=60&&beforeSelf-qs[0]?.pct>=15;
  const research=researchMismatch?`<section class="recommendations research-context"><h3>Odniesienie do badań</h3><p>Lyons i współautorzy wykazali, że ogólna samoocena zdolności rozpoznawania fałszywych wiadomości była tylko słabo związana z wykonaniem zadań, a największą nadmierną pewność obserwowano wśród osób z najniższymi wynikami. Nadmierna pewność wiązała się też z większą podatnością na fałszywe treści. W eksperymencie Guigona, Villeval i Drehera pewność oceny nie przewidywała trafności, ale wpływała na decyzję, czy szukać dodatkowych informacji. Wynik tej ewaluacji jest zgodny z problemem niedostatecznej kalibracji pewności, lecz go nie dowodzi, ponieważ dane PRZED są grupowe i nie łączą wyniku testu z samooceną tej samej osoby.</p><ul><li><a href="https://doi.org/10.1073/pnas.2019527118" target="_blank" rel="noopener">Lyons i in. (2021), <i>Overconfidence in news judgments is associated with false news susceptibility</i>, PNAS</a></li><li><a href="https://doi.org/10.1038/s44271-024-00170-w" target="_blank" rel="noopener">Guigon, Villeval i Dreher (2024), <i>Metacognition biases information seeking in assessing ambiguous news</i>, Communications Psychology</a></li></ul></section>`:'';
  dest.innerHTML=`<div class="conclusion-grid">${cards.map(([title,body])=>`<article class="conclusion-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('')}</div>${research}${recommendations.length?`<section class="recommendations"><h3>Zalecenia na przyszłość</h3><p>Proponowane działania po zakończeniu ewaluacji:</p><ul>${recommendations.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></section>`:''}<p class="conclusion-limit"><strong>Podstawa ewaluacji:</strong> ${esc(limits.join('; '))}. ${esc(context)} Różne liczebności oznaczają liczbę odpowiedzi otrzymanych w poszczególnych narzędziach i pomiarach. W opisie relacji wiedzy i pewności przyjmujemy umownie: poniżej 50% punktów — niższy wynik, co najmniej 75% — wysoki wynik, co najmniej 75% pozytywnych samoocen — wysoki udział pewnych odpowiedzi. To progi opisowe, nie normy diagnostyczne.</p>`;
  StatTests.render();
