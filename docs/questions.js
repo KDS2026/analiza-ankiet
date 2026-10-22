@@ -82,19 +82,35 @@ window.QUIZ_SPEC = {
     {
       "id": "q6",
       "number": 6,
-      "question": "Co może się dziać, gdy człowiek słyszy wokół siebie głównie opinie podobne do własnych?",
+      "version": "algorytmy",
+      "question": "Dlaczego algorytmy mediów społecznościowych mogą sprawiać, że widzimy coraz więcej treści podobnych do tych, które wcześniej oglądaliśmy?",
       "options": [
-        "Poznaje wiele różnych sposobów patrzenia na sprawę.",
-        "Coraz częściej szuka opinii osób o innych poglądach.",
-        "Utwierdza się w swoich poglądach i może uznać je za powszechne.",
-        "Zaczyna częściej zmieniać zdanie pod wpływem rozmów z otoczeniem."
+        "Ponieważ algorytmy wybierają przede wszystkim informacje, które zostały sprawdzone i uznane za wiarygodne.",
+        "Ponieważ algorytmy pokazują wszystkim użytkownikom podobne treści, aby zapewnić im równy dostęp do informacji.",
+        "Ponieważ algorytmy analizują nasze zachowania i przewidują, jakie treści najskuteczniej przyciągną naszą uwagę.",
+        "Ponieważ algorytmy wybierają głównie informacje zgodne z opiniami większości użytkowników."
       ],
       "correct": 2,
-      "answerAliases": [
-        "Poznaje pełniejszy obraz różnych stanowisk.",
-        "Łatwiej zauważa słabe strony własnych przekonań.",
-        "Jego przekonania mogą się wzmacniać, a inne spojrzenia stawać się mniej widoczne.",
-        "Zgodność opinii daje mu niezależne potwierdzenie ich prawdziwości."
+      "variants": [
+        {
+          "id": "q6",
+          "number": 6,
+          "question": "Co może się dziać, gdy człowiek słyszy wokół siebie głównie opinie podobne do własnych?",
+          "options": [
+            "Poznaje wiele różnych sposobów patrzenia na sprawę.",
+            "Coraz częściej szuka opinii osób o innych poglądach.",
+            "Utwierdza się w swoich poglądach i może uznać je za powszechne.",
+            "Zaczyna częściej zmieniać zdanie pod wpływem rozmów z otoczeniem."
+          ],
+          "correct": 2,
+          "answerAliases": [
+            "Poznaje pełniejszy obraz różnych stanowisk.",
+            "Łatwiej zauważa słabe strony własnych przekonań.",
+            "Jego przekonania mogą się wzmacniać, a inne spojrzenia stawać się mniej widoczne.",
+            "Zgodność opinii daje mu niezależne potwierdzenie ich prawdziwości."
+          ],
+          "version": "opinie"
+        }
       ]
     },
     {
@@ -109,6 +125,6 @@ window.QUIZ_SPEC = {
       ],
       "correct": 1
     }
-  ]
-}
-;
+  ],
+  "schemaVersion": 2
+};
