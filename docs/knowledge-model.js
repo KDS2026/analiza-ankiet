@@ -2,7 +2,7 @@
 'use strict';
 function dayKey(value){let s=String(value??'').trim(),m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'Brak daty'}
 function score(file,questions,engine,selectedDate,manual={}){
- const resolved=questions.map(q=>{const variants=[q,...(q.variants||[])],matches=variants.filter(v=>file.header.some(h=>engine.norm(h)===engine.norm(v.question)));return matches.length===1?{...q,...matches[0]}:q});questions=resolved;
+ const questionHeader=h=>engine.norm(h).replace(/^\d+\s+/,'');const resolved=questions.map(q=>{const variants=[q,...(q.variants||[])],matches=variants.filter(v=>file.header.some(h=>questionHeader(h)===engine.norm(v.question)));return matches.length===1?{...q,...matches[0]}:q});questions=resolved;
  const map=engine.mapping(file,questions,manual),bad=map.some(m=>m.column<0||m.conflict);const time=file.header.findIndex(h=>/^(sygnatura|czas|timestamp|znacznik)/.test(engine.norm(h)));
  const all=file.rows.filter(r=>map.some(m=>m.column>=0&&String(r.values[m.column]??'').trim())),dates=[...new Set(all.map(r=>dayKey(r.values[time])))].sort();
  const rows=all.filter(r=>selectedDate==='*'||dayKey(r.values[time])===selectedDate),counts=questions.map(()=>0),unknown=[],seen=new Set(),accepted=[],hist=Array(questions.length+1).fill(0);let incomplete=0,duplicates=0,missing=0;
