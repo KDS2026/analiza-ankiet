@@ -55,16 +55,20 @@ function renderConclusions(){
    let relation='Wiedza testowa i samoocena zmieniły się w tym samym kierunku.';
    if(Math.abs(testDelta)<=1||Math.abs(selfDelta)<=1)relation='Jeden z tych wskaźników pozostał na zbliżonym poziomie.';
    else if(Math.sign(testDelta)!==Math.sign(selfDelta))relation='Wiedza testowa i samoocena zmieniły się w przeciwnych kierunkach.';
-   cards.push(['Wspólny obraz',`${relation} Test: ${signed(testDelta)} p.p.; samoocena: ${signed(selfDelta)} p.p. To zestawienie dwóch wyników grupowych — bez identyfikatorów nie pokazuje trafności samooceny ani zmiany u tych samych osób.`]);
+   cards.push(['Wspólny obraz',`${relation} Test: ${signed(testDelta)} p.p.; samoocena: ${signed(selfDelta)} p.p. Są to uzupełniające się wyniki ewaluacji tej samej grupy uczestników przed i po warsztatach.`]);
   }
  }
  if(!cards.length){dest.innerHTML='<p class="subtle">Wczytaj dane, aby otrzymać ocenę opisową.</p>';return}
  const before=sets[0].length,after=sets[1].length,limits=[];
  if(rows.length)limits.push(`ankieta: ${before} odpowiedzi PRZED i ${after} PO`);
  if(qs.some(s=>s?.n))limits.push(`test: ${qs[0]?.n||0} PRZED i ${qs[1]?.n||0} PO`);
- dest.innerHTML=`<div class="conclusion-grid">${cards.map(([title,body])=>`<article class="conclusion-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('')}</div><p class="conclusion-limit"><strong>Podstawa i ostrożność interpretacji:</strong> ${esc(limits.join('; '))}. Porównanie PRZED/PO opisuje grupy o wskazanych liczebnościach. Nie dowodzi, że spotkanie było jedyną przyczyną zmian.</p>`;
+ const confirmed=$('link-confirm')?.checked;
+ const context=confirmed?'Dane dotyczą tych samych warsztatów i tej samej grupy uczestników.':'Aby połączyć wyniki w jedną ewaluację, potwierdź wyżej, że pliki dotyczą tych samych warsztatów i tej samej grupy.';
+ dest.innerHTML=`<div class="conclusion-grid">${cards.map(([title,body])=>`<article class="conclusion-card"><h3>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('')}</div><p class="conclusion-limit"><strong>Podstawa ewaluacji:</strong> ${esc(limits.join('; '))}. ${esc(context)} Różne liczebności oznaczają liczbę odpowiedzi otrzymanych w poszczególnych narzędziach i pomiarach.</p>`;
 }
 const priorRender=render;
 render=function(){priorRender();renderConclusions()};
+const priorKnowledge=renderKnowledge;
+renderKnowledge=function(){priorKnowledge();renderConclusions()};
 renderConclusions();
 })();
