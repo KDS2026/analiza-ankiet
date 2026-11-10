@@ -12,9 +12,11 @@ function score(file,questions,engine,selectedDate,manual={}){
 const normalize=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/\s+/g,' ');
 function inferredCategories(text){
  const value=normalize(text);if(!value)return[];
+ const offTopic=/^(oliwia g|frajerzy z otwocka|tusk|jolanta zietala|wanessa g|tymoteusz i szymonek z 3e|em a|szony|rahul rai|lysy|hypergamia gajdy|g|kamil kovalenko|kurwy|gajda)$/;
+ if(offTopic.test(value))return['Nie na temat'];
  const found=[];
  const add=(label,pattern)=>{if(pattern.test(value))found.push(label)};
- add('Każdy / wszyscy',/(^|\b)(kazdy|kazda|kazdego|wszyscy|wszystkich|wszyscy ludzie|kazdy czlowiek)(\b|$)/);
+ add('Każdy / wszyscy',/(^|\b)(kazdy|kazda|kazdego|wszyscy|wszystkich|wszyyscy|wszytscy|wszyscy ludzie|kazdy czlowiek)(\b|$)/);
  add('Wiek',/dziec|mlodziez|mlod(zi|y|e)|star(si|sze|y)|senior|wiek/);
  add('Wykształcenie',/wyksztalc|niewyksztalc|edukac/);
  add('Wiedza',/niewiedz|brak wiedzy|niedoinform|nie maja wiedzy|malo wiedza/);
@@ -28,6 +30,6 @@ function inferredCategories(text){
  return found.length?[...new Set(found)]:['Inne'];
 }
 const categories=r=>{const saved=String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);return saved.length?saved:inferredCategories(r.text)};
-function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),selected=coded.filter(r=>categories(r).includes(label));return{n:selected.length,base:coded.length,pct:coded.length?selected.length/coded.length*100:null,self:survey.stats(selected,'self')}}
+function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),substantive=coded.filter(r=>!categories(r).includes('Nie na temat')),baseRows=label==='Nie na temat'?coded:substantive,selected=baseRows.filter(r=>categories(r).includes(label));return{n:selected.length,base:baseRows.length,pct:baseRows.length?selected.length/baseRows.length*100:null,self:survey.stats(selected,'self')}}
 root.KnowledgeModel={dayKey,score,categories,inferredCategories,categoryStats};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
 })(typeof window==='undefined'?globalThis:window);
