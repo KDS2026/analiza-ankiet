@@ -4,6 +4,9 @@ assert.deepEqual(K.inferredCategories('Kazdy'),['Każdy / wszyscy']);
 assert.deepEqual(K.inferredCategories('Wszyyscy'),['Każdy / wszyscy']);
 assert.deepEqual(K.inferredCategories('TUSK'),['Nie na temat']);
 assert.deepEqual(K.categories({text:'każdy',category:''}),['Każdy / wszyscy']);
+assert.deepEqual(K.categories({text:'ja',category:'Ja / własna podatność'}),['Własna podatność („ja też”)']);
+assert.deepEqual(K.categories({text:'ja',category:'Ja / również ja | Ja / własna podatność'}),['Własna podatność („ja też”)']);
+assert.deepEqual(K.categories({text:'osoby głupie',category:'Ocena inteligencji'}),['Niska inteligencja']);
 const ranked=K.rankSchools([
  {place:'Szkoła B',date:'2026-11-01',quiz:[{}, {n:10,total:60}]},
  {place:'Szkoła A',date:'2026-11-02',quiz:[{}, {n:10,total:50}]},

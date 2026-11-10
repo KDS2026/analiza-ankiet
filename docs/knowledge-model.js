@@ -20,17 +20,18 @@ function inferredCategories(text){
  add('Wiek',/dziec|mlodziez|mlod(zi|y|e)|star(si|sze|y)|senior|wiek/);
  add('Wykształcenie',/wyksztalc|niewyksztalc|edukac/);
  add('Wiedza',/niewiedz|brak wiedzy|niedoinform|nie maja wiedzy|malo wiedza/);
- add('Ocena inteligencji',/glup|inteligenc|nieinteligent/);
+ add('Niska inteligencja',/glup|inteligenc|nieinteligent/);
  add('Łatwowierność / brak sprawdzania',/naiwn|latwowiern|wierza we wszystko|nie sprawdz|bez sprawdz|nie weryfik/);
  add('Emocje i strach',/emocj|strach|boja|przestrasz|panik/);
  add('Pośpiech / zmęczenie / stres',/pospiech|spiesza|zmecz|stres/);
  add('Otoczenie i źródła informacji',/internet|social media|media spolecz|telewiz|facebook|tiktok|otoczen|zrod(la|lo)|algorytm/);
  add('Nikt',/(^|\b)nikt(\b|$)/);
- add('Ja / również ja',/^(ja|mnie|mi|rowniez ja|takze ja|ja tez)[.!? ]*$/);
+ add('Własna podatność („ja też”)',/^(ja|mnie|mi|rowniez ja|takze ja|ja tez)[.!? ]*$/);
  return found.length?[...new Set(found)]:['Inne'];
 }
-const categories=r=>{const saved=String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);return saved.length?saved:inferredCategories(r.text)};
+function canonicalCategory(label){const raw=String(label||'').trim(),key=normalize(raw);if(['ocena inteligencji','niska inteligencja'].includes(key))return'Niska inteligencja';if(['ja','rowniez ja','ja tez','takze ja','ja / rowniez ja','ja / wlasna podatnosc','wlasna podatnosc','wlasna podatnosc („ja tez”)','wlasna podatnosc ("ja tez")'].includes(key))return'Własna podatność („ja też”)';return raw}
+const categories=r=>{const saved=[...new Set(String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean).map(canonicalCategory))];return saved.length?saved:inferredCategories(r.text)};
 function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),substantive=coded.filter(r=>!categories(r).includes('Nie na temat')),baseRows=label==='Nie na temat'?coded:substantive,selected=baseRows.filter(r=>categories(r).includes(label));return{n:selected.length,base:baseRows.length,pct:baseRows.length?selected.length/baseRows.length*100:null,self:survey.stats(selected,'self')}}
 function rankSchools(meetings,maxPoints=7){const schools=new Map();for(const m of meetings||[]){const q=m.quiz?.[1];if(!m.place||!q?.n)continue;if(!schools.has(m.place))schools.set(m.place,{place:m.place,total:0,n:0,dates:[]});const school=schools.get(m.place);school.total+=Number(q.total)||0;school.n+=Number(q.n)||0;school.dates.push(m.date)}return[...schools.values()].map(s=>({...s,pct:s.total/s.n/maxPoints*100,average:s.total/s.n})).sort((a,b)=>b.pct-a.pct||b.n-a.n||a.place.localeCompare(b.place,'pl'))}
-root.KnowledgeModel={dayKey,score,categories,inferredCategories,categoryStats,rankSchools};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
+root.KnowledgeModel={dayKey,score,categories,inferredCategories,canonicalCategory,categoryStats,rankSchools};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
 })(typeof window==='undefined'?globalThis:window);
