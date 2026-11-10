@@ -1,7 +1,7 @@
 'use strict';
 const K=KnowledgeModel,Q=window.QUIZ_SPEC.questions;
 const codingOverrides=new Map(),quizFiles=[null,null],quizDates=['',''],quizManual=[{},{}];
-const categoryLabels=['Każdy / wszyscy','Wiek','Wykształcenie','Wiedza','Ocena inteligencji','Łatwowierność / brak sprawdzania','Emocje i strach','Pośpiech / zmęczenie / stres','Otoczenie i źródła informacji','Nikt','Ja / również ja','Inne','Nie na temat'];
+const categoryLabels=['Każdy / wszyscy','Wiek','Wykształcenie','Wiedza','Łatwowierność / brak sprawdzania','Emocje i strach','Pośpiech / zmęczenie / stres','Otoczenie i źródła informacji','Nikt','Ja / również ja','Inne','Nie na temat'];
 const phaseNames=['PRZED','PO'];let quizBusy=false;
 const quizGoogleUrls=['https://script.google.com/macros/s/AKfycbyXDiaQdaznFeUcwpjCyPDyeJdCQEEkzBEIDx4ex_aF6lU5gxTwM8X_OLDAbfA2rHRarg/exec','https://script.google.com/macros/s/AKfycbyWjwITKjw8Lka4YH94b5EBv_jtjRtyDiVBpGU7w-rbmiAu_IabfQQgaxf8-TCI1DKj/exec'];
 function downloadCSV(name,lines){const url=URL.createObjectURL(new Blob(['\ufeff'+lines.map(r=>r.map(csvCell).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}

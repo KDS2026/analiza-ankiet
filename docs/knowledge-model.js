@@ -20,7 +20,6 @@ function inferredCategories(text){
  add('Wiek',/dziec|mlodziez|mlod(zi|y|e)|star(si|sze|y)|senior|wiek/);
  add('Wykształcenie',/wyksztalc|niewyksztalc|edukac/);
  add('Wiedza',/niewiedz|brak wiedzy|niedoinform|nie maja wiedzy|malo wiedza/);
- add('Ocena inteligencji',/glup|inteligenc|nieinteligent/);
  add('Łatwowierność / brak sprawdzania',/naiwn|latwowiern|wierza we wszystko|nie sprawdz|bez sprawdz|nie weryfik/);
  add('Emocje i strach',/emocj|strach|boja|przestrasz|panik/);
  add('Pośpiech / zmęczenie / stres',/pospiech|spiesza|zmecz|stres/);
@@ -29,7 +28,7 @@ function inferredCategories(text){
  add('Ja / również ja',/^(ja|mnie|mi|rowniez ja|takze ja|ja tez)[.!? ]*$/);
  return found.length?[...new Set(found)]:['Inne'];
 }
-const categories=r=>{const saved=String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);return saved.length?saved:inferredCategories(r.text)};
+const categories=r=>{const saved=String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean).filter(label=>label!=='Ocena inteligencji');return saved.length?saved:inferredCategories(r.text)};
 function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),substantive=coded.filter(r=>!categories(r).includes('Nie na temat')),baseRows=label==='Nie na temat'?coded:substantive,selected=baseRows.filter(r=>categories(r).includes(label));return{n:selected.length,base:baseRows.length,pct:baseRows.length?selected.length/baseRows.length*100:null,self:survey.stats(selected,'self')}}
 root.KnowledgeModel={dayKey,score,categories,inferredCategories,categoryStats};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
 })(typeof window==='undefined'?globalThis:window);
