@@ -5,10 +5,21 @@ window.WorkshopEvaluation=(()=>{
  let rows=[],verifiedAt=0,request='',timer=null,loading=false,error='',lastScope='',aliases={};
  try{aliases=JSON.parse(localStorage.getItem('lustro-evaluation-place-aliases')||'{}')}catch{}
  aliases['Skierniewice_Liceum_Plastyczne|2026-10-21']='Skierniewice'; // Przypisanie potwierdzone przez Kingę 22.10.2026.
- const norm=s=>String(s??'').normalize('NFC').toLocaleLowerCase('pl').replace(/[_\s]+/g,' ').trim();
+ const norm=s=>String(s??'').normalize('NFC').toLocaleLowerCase('pl').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+ const plain=s=>norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l');
+ function automaticCode(text){
+  const value=plain(text);
+  if(!value)return{label:'excluded',automatic:true};
+  if(/\b(mniej ai|za duzo ai|ale (za )?dlug\w*|troche dlug\w*)\b/.test(value))return{label:'mixed',automatic:true};
+  if(/\b(nic specjalnego|nudn\w*|slab\w*|tragedia|beznadziej\w*|nuda)\b/.test(value)&&!/\b(mowi|uwaza ze)\b/.test(value))return{label:'negative',automatic:true};
+  if(/\b(super|ok|spoko|fajn\w*|git|pozytywn\w*|ciekaw\w*|przydat\w*|podobal\w*|podoba\w*|zadowol\w*|edukacyjn\w*|interesuj\w*|dobrze|mega|cudown\w*|dojeb\w*|zajeb\w*|wykurwist\w*|szacunek|intrygujac\w*|wdzieczn\w*|wiedze|wiedza|dziesiec .* z dziesieciu)\b/.test(value))return{label:'positive',automatic:true};
+  return{label:'excluded',automatic:true};
+ }
  function day(value){const s=String(value??'');if(/^\d{4}-\d\d-\d\dT/.test(s)){const d=new Date(s);if(!Number.isFinite(+d))return'';const parts=Object.fromEntries(new Intl.DateTimeFormat('en',{timeZone:'Europe/Warsaw',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).map(x=>[x.type,x.value]));return `${parts.year}-${parts.month}-${parts.day}`}return K.dayKey(s)}
  function scopes(){if(analysisMode==='multiple'){const saved=selectedMeetings().map(m=>({id:m.id,place:m.place,date:m.date}));if(saved.length)return saved;const current=new Map();for(const r of filtered()){const date=K.dayKey(r.time),id=r.place+'|'+date;if(r.place&&date&&date!=='Brak daty'&&!current.has(id))current.set(id,{id,place:r.place,date})}return [...current.values()].sort((a,b)=>a.date.localeCompare(b.date)||a.place.localeCompare(b.place,'pl'))}const rr=filtered();if(!rr.length||!uniqueSurveyScope())return[];return[{id:rr[0].place+'|'+K.dayKey(rr[0].time),place:rr[0].place,date:K.dayKey(rr[0].time)}]}
- function matches(scope){const place=aliases[scope.id]||scope.place;return rows.filter(r=>norm(r.city)===norm(place)&&r.date===scope.date)}
+ // Jedno spotkanie odbywa się danego dnia, dlatego oceny łączymy wyłącznie po dacie.
+ // Nazwa szkoły jest opisem i nie może blokować danych z powodu przecinka, literówki lub skrótu.
+ function matches(scope){return rows.filter(r=>r.date===scope.date)}
  const labels={positive:'Pozytywne',mixed:'Mieszane',negative:'Krytyczne',excluded:'Wykluczone jako niezwiązane z oceną zajęć',pending:'Do analizy'};
  const category=label=>label==='neutral'?'mixed':label;
  const included=data=>data.filter(r=>r.code?.label!=='excluded');
@@ -25,9 +36,8 @@ window.WorkshopEvaluation=(()=>{
   const selectedRaw=[...new Map(selected.flatMap(matches).map(r=>[r.id,r])).values()],selectedRows=included(selectedRaw);
   const overall=selected.length>1&&verifiedAt?`<section class="evaluation-overall"><h3>Łącznie — wybrany zakres spotkań</h3>${scale(selectedRows,selectedRaw.length-selectedRows.length)}</section>`:'';
   dest.innerHTML=scopeSummary+overall+selected.map(scope=>{
-   const raw=matches(scope),data=included(raw),places=[...new Set(rows.filter(r=>r.date===scope.date).map(r=>r.city))].sort((a,b)=>a.localeCompare(b,'pl')),known=places.some(p=>norm(p)===norm(aliases[scope.id]||scope.place));
-   const linkedElsewhere=selected.some(other=>other.id!==scope.id&&other.date===scope.date&&norm(aliases[other.id]||other.place)===norm(aliases[scope.id]||scope.place));
-   return `<article class="evaluation-meeting"><h3>${esc(scope.place)} · ${esc(scope.date)}</h3>${!known&&places.length?`<label>Miejsce w arkuszu <select data-evaluation-alias="${esc(scope.id)}"><option value="">Wybierz miejsce…</option>${places.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}</select></label>`:''}${known&&aliases[scope.id]?`<button data-evaluation-unlink="${esc(scope.id)}">Zmień przypisanie miejsca</button>`:''}${linkedElsewhere?'<p>Te same wypowiedzi są liczone tylko raz w wykresie łącznym.</p>':''}${!data.length?`<p>${loading?'Trwa sprawdzanie arkusza.':'Brak wypowiedzi zawierających ocenę zajęć.'}</p>`:scale(data,raw.length-data.length)}</article>`;
+   const raw=matches(scope),data=included(raw);
+   return `<article class="evaluation-meeting"><h3>${esc(scope.place)} · ${esc(scope.date)}</h3>${!data.length?`<p>${loading?'Trwa sprawdzanie arkusza.':'Brak wypowiedzi zawierających ocenę zajęć dla tej daty.'}</p>`:scale(data,raw.length-data.length)}</article>`;
   }).join('');
  }
 
@@ -36,12 +46,12 @@ window.WorkshopEvaluation=(()=>{
   const fail=()=>{if(request!==id)return;loading=false;error='Nie udało się odświeżyć ocen zajęć. Ponowna próba za minutę; możesz też użyć przycisku odświeżania.';render()};
   script.onerror=()=>{script.remove();fail()};script.onload=()=>script.remove();document.body.append(script);timer=setTimeout(()=>{script.remove();if(loading)fail()},25000);
  }
- window.evalData=async message=>{if(message.request!==request||!Array.isArray(message.rows))return;clearTimeout(timer);const seen=new Set();rows=message.rows.slice(1).filter(r=>String(r[2]||'').trim()).map((r,i)=>({time:r[0],date:day(r[0]),city:String(r[1]||''),text:String(r[2]),id:String(r[3]||JSON.stringify([r[0],r[1],r[2],i]))})).filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true}).sort((a,b)=>new Date(a.time)-new Date(b.time));await Promise.all(rows.map(async r=>{const reviewed=EvaluationCoding.records[r.id];if(!reviewed)return;try{const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(r.text)),hash=[...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');if(hash===reviewed.hash)r.code=reviewed}catch{}}));if(message.request!==request)return;verifiedAt=Date.now();loading=false;error='';render()};
+ window.evalData=async message=>{if(message.request!==request||!Array.isArray(message.rows))return;clearTimeout(timer);const seen=new Set();rows=message.rows.slice(1).filter(r=>String(r[2]||'').trim()).map((r,i)=>({time:r[0],date:day(r[0]),city:String(r[1]||''),text:String(r[2]),id:String(r[3]||JSON.stringify([r[0],r[1],r[2],i]))})).filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true}).sort((a,b)=>new Date(a.time)-new Date(b.time));await Promise.all(rows.map(async r=>{const reviewed=EvaluationCoding.records[r.id];if(reviewed)try{const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(r.text)),hash=[...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join('');if(hash===reviewed.hash)r.code=reviewed}catch{}if(!r.code)r.code=automaticCode(r.text)}));if(message.request!==request)return;verifiedAt=Date.now();loading=false;error='';render()};
  function update(){const signature=JSON.stringify(scopes());if(signature!==lastScope){lastScope=signature;refresh()}else render()}
  $('evaluation-refresh').textContent='Odśwież tylko oceny zajęć';$('evaluation-refresh').onclick=refresh;
  document.addEventListener('change',e=>{const sel=e.target.closest('[data-evaluation-alias]');if(sel){aliases[sel.dataset.evaluationAlias]=sel.value;try{localStorage.setItem('lustro-evaluation-place-aliases',JSON.stringify(aliases))}catch{}refresh()}});
  document.addEventListener('click',e=>{const b=e.target.closest('[data-evaluation-unlink]');if(!b)return;delete aliases[b.dataset.evaluationUnlink];try{localStorage.setItem('lustro-evaluation-place-aliases',JSON.stringify(aliases))}catch{}render()});
  const previousRender=renderPortfolio;renderPortfolio=function(){previousRender();update()};
  setInterval(()=>{if(scopes().length&&!loading)refresh()},60000);update();
- return{day,norm,matches,scopes,refresh};
+ return{day,norm,automaticCode,matches,scopes,refresh};
 })();
