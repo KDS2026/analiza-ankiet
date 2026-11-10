@@ -44,14 +44,16 @@
   finally{busy=false;if(button)button.disabled=false}
  }
  async function refreshAll(){
-  const button=$('google-refresh-all'),status=$('google-sync-status');if(button)button.disabled=true;status.textContent='Odświeżam chmurę, oba quizy i oceny zajęć…';
+  const button=$('google-refresh-all'),status=$('google-sync-status');if(button)button.disabled=true;status.textContent='Odświeżam wszystkie arkusze Google: ankietę PRZED i PO, quiz PRZED i PO oraz oceny zajęć…';
   const survey=await loadGoogleSurvey({silent:true});
   const quizzes=typeof loadGoogleQuizzes==='function'?loadGoogleQuizzes():Promise.resolve();
   if(window.WorkshopEvaluation?.refresh)window.WorkshopEvaluation.refresh();
-  await Promise.allSettled([quizzes]);if(button)button.disabled=false;return survey;
+  const [quizResult]=await Promise.allSettled([quizzes]);
+  if(survey&&quizResult.status==='fulfilled')status.textContent='Odświeżono wszystkie arkusze Google: ankietę PRZED i PO, quiz PRZED i PO oraz oceny zajęć. Potwierdzenie odczytu ocen jest widoczne w ich sekcji.';
+  if(button)button.disabled=false;return survey;
  }
  window.loadGoogleSurvey=loadGoogleSurvey;window.refreshAllGoogleData=refreshAll;
- $('google-refresh-all').onclick=refreshAll;
+ const refreshButton=$('google-refresh-all');refreshButton.textContent='Odśwież dane ze wszystkich arkuszy Google';refreshButton.onclick=refreshAll;
  // Po odtworzeniu lokalnego stanu pobieramy świeże dane. Zapisane spotkania pozostają bez zmian.
  setTimeout(refreshAll,0);
 })();
