@@ -1338,6 +1338,23 @@ input[type="checkbox"] {
   padding: 20px;
   margin: 18px 0;
 }
+.school-ranking tbody tr:first-child {
+  background: #f3f7fb;
+}
+.school-ranking td:first-child strong {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: white;
+  background: var(--blue);
+}
+@media print {
+  .internal-only {
+    display: none !important;
+  }
+}
 .portfolio-scope h3 {
   font-size: 19px;
   margin-bottom: 5px;

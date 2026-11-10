@@ -31,5 +31,6 @@ function inferredCategories(text){
 }
 const categories=r=>{const saved=String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);return saved.length?saved:inferredCategories(r.text)};
 function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),substantive=coded.filter(r=>!categories(r).includes('Nie na temat')),baseRows=label==='Nie na temat'?coded:substantive,selected=baseRows.filter(r=>categories(r).includes(label));return{n:selected.length,base:baseRows.length,pct:baseRows.length?selected.length/baseRows.length*100:null,self:survey.stats(selected,'self')}}
-root.KnowledgeModel={dayKey,score,categories,inferredCategories,categoryStats};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
+function rankSchools(meetings,maxPoints=7){const schools=new Map();for(const m of meetings||[]){const q=m.quiz?.[1];if(!m.place||!q?.n)continue;if(!schools.has(m.place))schools.set(m.place,{place:m.place,total:0,n:0,dates:[]});const school=schools.get(m.place);school.total+=Number(q.total)||0;school.n+=Number(q.n)||0;school.dates.push(m.date)}return[...schools.values()].map(s=>({...s,pct:s.total/s.n/maxPoints*100,average:s.total/s.n})).sort((a,b)=>b.pct-a.pct||b.n-a.n||a.place.localeCompare(b.place,'pl'))}
+root.KnowledgeModel={dayKey,score,categories,inferredCategories,categoryStats,rankSchools};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
 })(typeof window==='undefined'?globalThis:window);
