@@ -2097,6 +2097,13 @@ footer {
     margin: 0 0 8px;
     font-size: 19px;
   }
+  .print-scope .report-intro {
+    max-width: 170mm;
+    margin: 0 0 10px;
+    color: var(--ink);
+    font-size: 10px;
+    line-height: 1.45;
+  }
   .print-scope ul {
     display: flex;
     flex-wrap: wrap;
@@ -2156,6 +2163,11 @@ footer {
   .print-scope h2 {
     font-size: 13px;
     margin-bottom: 4px;
+  }
+  .print-scope .report-intro {
+    margin-bottom: 5px;
+    font-size: 7.5px;
+    line-height: 1.35;
   }
   .print-scope ul {
     gap: 3px 12px;
