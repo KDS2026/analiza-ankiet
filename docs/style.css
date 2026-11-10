@@ -74,6 +74,14 @@ footer{align-items:center;background:#fff;max-width:none;margin-top:35px;padding
  footer{padding:2px 0 0;margin-top:2px;gap:6px;break-inside:auto;page-break-inside:auto}.footer-funding img{width:105px}.footer-project{font-size:5.5px;line-height:1.15}
 }
 
+.single-workspace{margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:14px;background:#f7f9fc}
+.single-workspace label{display:grid;gap:8px;max-width:560px}
+.single-workspace select{width:100%;font-size:1rem;border:2px solid var(--blue);background:#fff}
+.single-workspace .subtle{margin:10px 0 0}
+.quiz-linked-date{padding:10px 12px;border-radius:9px;background:#eef3f8;color:var(--ink)}
+body:not(.multiple-analysis) .filters label:has(#place),body:not(.multiple-analysis) .filters label:has(#survey-date){display:none}
+@media print{.single-workspace{display:none!important}}
+
 /* Pełny zestaw znaków projektu w nagłówku i stopce */
 .brand,.footer-logos{display:flex;align-items:center;gap:18px;min-width:0}
 .brand img,.footer-logos img{display:block;width:auto;object-fit:contain}
