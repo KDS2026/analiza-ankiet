@@ -9,7 +9,25 @@ function score(file,questions,engine,selectedDate,manual={}){
  if(!bad)for(const r of rows){const id=submissionId>=0?String(r.values[submissionId]??'').trim():'';if(id&&seen.has(id)){duplicates++;continue}if(id)seen.add(id);let points=0,blanks=0,un=[];const answers=map.map((m,i)=>engine.matchAnswer(r.values[m.column],questions[i].options,questions[i].answerAliases));answers.forEach((a,i)=>{if(a.blank)blanks++;if(a.unknown)un.push({row:r.row,question:i,value:r.values[map[i].column]});if(a.index===questions[i].correct)points++});if(un.length){unknown.push(...un);continue}answers.forEach((a,i)=>{if(a.index===questions[i].correct)counts[i]++});if(blanks)incomplete++;missing+=blanks;hist[points]++;accepted.push({...r,points});}
  const n=accepted.length,total=accepted.reduce((s,r)=>s+r.points,0);return{questions:resolved,map,bad,dates,time,totalRows:all.length,selectedRows:rows.length,n,total,average:n?total/n:null,pct:n?total/n/questions.length*100:null,counts,hist,incomplete,missing,duplicates,unknown,excludedUnknown:new Set(unknown.map(u=>u.row)).size,accepted};
 }
-const categories=r=>String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);
+const normalize=v=>String(v??'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l').replace(/\s+/g,' ');
+function inferredCategories(text){
+ const value=normalize(text);if(!value)return[];
+ const found=[];
+ const add=(label,pattern)=>{if(pattern.test(value))found.push(label)};
+ add('Każdy / wszyscy',/(^|\b)(kazdy|kazda|kazdego|wszyscy|wszystkich|wszyscy ludzie|kazdy czlowiek)(\b|$)/);
+ add('Wiek',/dziec|mlodziez|mlod(zi|y|e)|star(si|sze|y)|senior|wiek/);
+ add('Wykształcenie',/wyksztalc|niewyksztalc|edukac/);
+ add('Wiedza',/niewiedz|brak wiedzy|niedoinform|nie maja wiedzy|malo wiedza/);
+ add('Ocena inteligencji',/glup|inteligenc|nieinteligent/);
+ add('Łatwowierność / brak sprawdzania',/naiwn|latwowiern|wierza we wszystko|nie sprawdz|bez sprawdz|nie weryfik/);
+ add('Emocje i strach',/emocj|strach|boja|przestrasz|panik/);
+ add('Pośpiech / zmęczenie / stres',/pospiech|spiesza|zmecz|stres/);
+ add('Otoczenie i źródła informacji',/internet|social media|media spolecz|telewiz|facebook|tiktok|otoczen|zrod(la|lo)|algorytm/);
+ add('Nikt',/(^|\b)nikt(\b|$)/);
+ add('Ja / również ja',/^(ja|mnie|mi|rowniez ja|takze ja|ja tez)[.!? ]*$/);
+ return found.length?[...new Set(found)]:['Inne'];
+}
+const categories=r=>{const saved=String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean);return saved.length?saved:inferredCategories(r.text)};
 function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),selected=coded.filter(r=>categories(r).includes(label));return{n:selected.length,base:coded.length,pct:coded.length?selected.length/coded.length*100:null,self:survey.stats(selected,'self')}}
-root.KnowledgeModel={dayKey,score,categories,categoryStats};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
+root.KnowledgeModel={dayKey,score,categories,inferredCategories,categoryStats};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
 })(typeof window==='undefined'?globalThis:window);
