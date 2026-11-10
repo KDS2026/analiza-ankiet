@@ -95,7 +95,7 @@ function renderConclusions(){
   }
  }
  const everyone=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M).pct),age=sets.map(s=>K.categoryStats(s,'Wiek',M).pct),confidence=sets.map(s=>M.stats(s,'self').pct);
- const surveyDates=selectedSurveyDates(),multiLinked=analysisMode==='multiple'&&surveyDates.length>1&&quizDates.every(d=>d==='@survey'||surveyDates.includes(d));
+ const surveyDates=selectedSurveyDates(),multiLinked=typeof analysisMode!=='undefined'&&analysisMode==='multiple'&&surveyDates.length>1&&quizDates.every(d=>d==='@survey'||surveyDates.includes(d));
  const linked=(multiLinked||!!$('link-confirm')?.checked&&uniqueSurveyScope()&&quizDates.every(d=>d===K.dayKey(rows[0]?.time)))&&quizVersionsMatch(qs);
  const interpretation=rows.length?EvaluationInterpretation.describe({everyone,age,self:confidence,test:linked?qs.map(s=>s?.pct??null):null,linked}):[];
  cards.push(...interpretation);
