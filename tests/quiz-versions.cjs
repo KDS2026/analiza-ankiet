@@ -7,6 +7,21 @@ assert.deepEqual(K.categories({text:'każdy',category:''}),['Każdy / wszyscy'])
 assert.deepEqual(K.categories({text:'ja',category:'Ja / własna podatność'}),['Własna podatność („ja też”)']);
 assert.deepEqual(K.categories({text:'ja',category:'Ja / również ja | Ja / własna podatność'}),['Własna podatność („ja też”)']);
 assert.deepEqual(K.categories({text:'osoby głupie',category:'Ocena inteligencji'}),['Niska inteligencja']);
+assert.deepEqual(K.categories({text:'Debile i lewacy',category:'Łatwowierność / brak sprawdzania',categoryApproved:false}),['Niska inteligencja']);
+assert.deepEqual(K.categories({text:'Debile i lewacy',category:'Łatwowierność / brak sprawdzania',categoryApproved:true}),['Łatwowierność / brak sprawdzania']);
+assert.deepEqual(K.categories({text:'Wszyscy, którzy mają dostęp do jakiegokolwiek źródła informacji',category:'',categoryApproved:false}),['Każdy / wszyscy','Otoczenie i źródła informacji']);
+assert.deepEqual(K.categories({text:'Wszyscy niezależnie od wieku czy płci',category:'',categoryApproved:false}),['Każdy / wszyscy']);
+assert.deepEqual(K.categories({text:'osoby niezbyt inteligentne',category:'',categoryApproved:false}),['Niska inteligencja']);
+assert.deepEqual(K.categories({text:'Ludzie nieświadomi',category:'',categoryApproved:false}),['Wiedza']);
+assert.deepEqual(K.categories({text:'Ludzie ufni',category:'',categoryApproved:false}),['Łatwowierność / brak sprawdzania']);
+assert.deepEqual(K.categories({text:'Moja babcia',category:'',categoryApproved:false}),['Wiek']);
+assert.deepEqual(K.categories({text:'Nie wiem',category:'',categoryApproved:false}),['Brak odpowiedzi / nie wiem']);
+assert.deepEqual(K.categories({text:'Lewackie qwy',category:'',categoryApproved:false}),['Nie na temat']);
+assert.deepEqual(K.categories({text:'Moim zdaniem nie uważni ludzie',category:'',categoryApproved:false}),['Łatwowierność / brak sprawdzania']);
+assert.deepEqual(K.categories({text:'Na dezinformację narażeni są ludzie, którzy po samym temacie artykułu są już nastawieni negatywnie',category:'',categoryApproved:false}),['Uprzedzenia i nastawienie']);
+assert.deepEqual(K.categories({text:'Spora część społeczeństwa',category:'',categoryApproved:false}),['Każdy / wszyscy']);
+assert.deepEqual(K.categories({text:'Osoby impulsywne',category:'',categoryApproved:false}),['Emocje i strach']);
+assert.deepEqual(K.categories({text:'Osoby o niskich kompetencjach medialnych',category:'',categoryApproved:false}),['Wiedza']);
 const ranked=K.rankSchools([
  {place:'Szkoła B',date:'2026-11-01',quiz:[{}, {n:10,total:60}]},
  {place:'Szkoła A',date:'2026-11-02',quiz:[{}, {n:10,total:50}]},

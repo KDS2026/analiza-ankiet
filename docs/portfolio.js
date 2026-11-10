@@ -2,7 +2,7 @@
 let meetingArchive=[],analysisMode='single',selectedMeetingIds=[];
 const ratio=(num,den)=>den?num/den*100:null;
 function snapshotStat(rows,key){const s=M.stats(rows,key);return{positive:s.positive,n:s.n,pct:s.pct}}
-function categorySnapshot(rows){const base=rows.filter(r=>K.categories(r).length).length,counts={};for(const r of rows)for(const c of K.categories(r))counts[c]=(counts[c]||0)+1;return{base,counts}}
+function categorySnapshot(rows){const excluded=new Set(['Nie na temat','Brak odpowiedzi / nie wiem']),base=rows.filter(r=>K.categories(r).length&&!K.categories(r).some(c=>excluded.has(c))).length,counts={};for(const r of rows)for(const c of K.categories(r))counts[c]=(counts[c]||0)+1;return{base,counts}}
 const copyData=value=>JSON.parse(JSON.stringify(value));
 function meetingSnapshot(){
  const rr=filtered();if(!rr.length||!uniqueSurveyScope())throw Error('W filtrach wybierz jedno miejsce i jedną datę spotkania.');
@@ -11,7 +11,7 @@ function meetingSnapshot(){
  if(!quizVersionsMatch(qs))throw Error('Testy PRZED i PO muszą mieć tę samą wersję pytań.');
  if(!quizDates.every(d=>d===date))throw Error('Daty obu testów muszą być zgodne z datą ankiety: '+date+'.');
  const sets=phaseNames.map(st=>rr.filter(r=>r.stage===st));if(sets.some(s=>!s.length))throw Error('Ankieta musi zawierać odpowiedzi PRZED i PO.');
- const cleanRows=rr.map(({self,others,time,text,category,place,stage})=>({self,others,time,text,category,place,stage}));
+ const cleanRows=rr.map(r=>({self:r.self,others:r.others,time:r.time,text:r.text,place:r.place,stage:r.stage,category:K.categories(r).join(' | '),categoryApproved:true}));
  const detail={sources:[{id:'meeting-'+place+'-'+date,name:'Ankieta · '+place+' · '+date,rows:cleanRows,sheets:['PRZED','PO']}],quizFiles:copyData(quizFiles),quizDates:quizDates.slice(),quizManual:copyData(quizManual),confirmed:true};
  return{id:place+'|'+date,label:place+' · '+date,place,date,survey:sets.map(rows=>({n:rows.length,self:snapshotStat(rows,'self'),others:snapshotStat(rows,'others'),categories:categorySnapshot(rows)})),quiz:qs.map(s=>({n:s.n,total:s.total,pct:s.pct,counts:s.counts.slice(),questions:s.questions.map(q=>q.question)})),detail,savedAt:new Date().toISOString()};
 }

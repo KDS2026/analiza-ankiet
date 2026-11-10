@@ -26,7 +26,8 @@
   const parsed=[];
   for(const row of rows.slice(1)){
    if(![ix.time,ix.text,ix.self,ix.others].some(i=>i>=0&&cell(row,i)))continue;
-   parsed.push({time:cell(row,ix.time),text:cell(row,ix.text),self:cell(row,ix.self),others:cell(row,ix.others),place:cell(row,ix.place)||'Nie podano miejsca',stage:cell(row,ix.stage).toUpperCase()||stage,category:cell(row,ix.approved)||cell(row,ix.automatic)});
+   const approved=cell(row,ix.approved),automatic=cell(row,ix.automatic);
+   parsed.push({time:cell(row,ix.time),text:cell(row,ix.text),self:cell(row,ix.self),others:cell(row,ix.others),place:cell(row,ix.place)||'Nie podano miejsca',stage:cell(row,ix.stage).toUpperCase()||stage,category:approved||automatic,categoryApproved:!!approved});
   }
   if(!parsed.length)throw Error('Arkusz '+stage+' nie zawiera odpowiedzi do analizy.');
   return{id:'google-survey-'+round,name:'Arkusz Google · chmura '+stage,googleSurvey:true,sheets:[stage],rows:parsed};

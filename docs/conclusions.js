@@ -8,7 +8,7 @@ const sentenceDelta=(label,values,bases)=>{
  return `${label} ${direction(d)}: ${fmt(values[0])}% PRZED (n = ${bases[0]}) i ${fmt(values[1])}% PO (n = ${bases[1]}), czyli ${signed(d)} p.p.`;
 };
 function topCategories(rows,limit=3){
- const coded=rows.filter(r=>K.categories(r).length&&!K.categories(r).includes('Nie na temat')),counts=new Map();
+ const coded=rows.filter(r=>K.categories(r).length&&!K.categories(r).some(c=>['Nie na temat','Brak odpowiedzi / nie wiem'].includes(c))),counts=new Map();
  for(const r of coded)for(const label of K.categories(r))counts.set(label,(counts.get(label)||0)+1);
  return {base:coded.length,items:[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pl')).slice(0,limit)};
 }
