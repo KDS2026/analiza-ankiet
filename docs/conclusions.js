@@ -51,7 +51,7 @@ function inferenceText(qs,sets){
 }
 function recommendationItems(qs,sets){
  const items=[
-  'Przekazać szkole krótkie podsumowanie ewaluacji z wynikami PRZED i PO oraz omówić z dyrekcją lub koordynującym nauczycielem najważniejsze zmiany.',
+  'Przekazać szkole krótkie podsumowanie ewaluacji z wynikami PRZED i PO. Podsumowanie zawiera wyjaśnienie najważniejszych zmian i wniosków.',
   'Zachęcić nauczycieli do dalszego podejmowania tematu dezinformacji podczas lekcji, godzin wychowawczych i rozmów o bieżących treściach z internetu.',
   'Przesłać szkole krótkie materiały dla uczniów: listę kroków weryfikacji informacji, przykłady sprawdzania źródeł oraz pytania pomocne przed udostępnieniem treści.',
   'Przekazać gotowe infografiki do wywieszenia w gazetce szkolnej i udostępnienia w kanałach używanych przez szkołę, aby najważniejsze zasady pozostały widoczne po warsztatach.'
