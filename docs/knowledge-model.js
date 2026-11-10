@@ -1,6 +1,29 @@
 (function(root){
 'use strict';
 function dayKey(value){let s=String(value??'').trim(),m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'Brak daty'}
+const workshopSchedule=[
+ {date:'2026-10-19',place:'Centrum Kształcenia Zawodowego i Ustawicznego w Łapanowie'},
+ {date:'2026-10-20',place:'Zespół Szkół Zawodowych nr 2 w Krakowie'},
+ {date:'2026-10-21',place:'Niepubliczne Liceum Sztuk Plastycznych COSINUS w Skierniewicach'},
+ {date:'2026-11-02',place:'IX Liceum Ogólnokształcące im. Tadeusza Nowakowskiego z Oddziałami Dwujęzycznymi w Bydgoszczy'},
+ {date:'2026-11-03',place:'Korczakowskie Liceum Ogólnokształcące w Olsztynie'},
+ {date:'2026-11-04',place:'Zespół Szkół Nr 1 w Ostrowi Mazowieckiej'},
+ {date:'2026-11-09',place:'Liceum Ogólnokształcące nr 63 (LXIII LO) im. Lajosa Kossutha w Warszawie'},
+ {date:'2026-11-10',place:'99 Liceum Ogólnokształcące im. Z. Herberta w Warszawie'},
+ {date:'2026-11-16',place:'II Liceum Ogólnokształcące im. C.K. Norwida w Jeleniej Górze'},
+ {date:'2026-11-17',place:'I Liceum Ogólnokształcące im. Bolesława Chrobrego w Piotrkowie Trybunalskim'},
+ {date:'2026-11-18',place:'I Liceum Ogólnokształcące im. Powstańców Wielkopolskich w Wągrowcu'},
+ {date:'2026-11-23',place:'Zespół Szkół Ogólnokształcących nr 1 w Gdańsku'},
+ {date:'2026-11-24',place:'Zespół Szkół Gastronomiczno-Hotelarskich w Gdańsku'},
+ {date:'2026-11-25',place:'IV Liceum Ogólnokształcące w Gdańsku'},
+ {date:'2026-11-26',place:'Zespół Szkół Technicznych i Ogólnokształcących w Białymstoku'},
+ {date:'2026-11-27',place:'Zespół Szkół Mechanicznych w Białymstoku'},
+ {date:'2026-12-01',place:'Zespół Szkół Publicznych w Polanowie'},
+ {date:'2026-12-02',place:'Technikum Leśne w Warcinie'},
+ {date:'2026-12-03',place:'I Prywatne Liceum Ogólnokształcące w Szczecinie'}
+];
+const workshopByDate=new Map(workshopSchedule.map(item=>[item.date,item]));
+function meetingForDate(value){return workshopByDate.get(dayKey(value))||null}
 function score(file,questions,engine,selectedDate,manual={}){
  const questionHeader=h=>engine.norm(h).replace(/^\d+\s+/,'');const resolved=questions.map(q=>{const variants=[q,...(q.variants||[])],matches=variants.filter(v=>file.header.some(h=>questionHeader(h)===engine.norm(v.question))),base=matches.length===1?{...q,...matches[0]}:q,max=Math.max(...variants.map(v=>v.options.length));base.answerAliases=Array.from({length:max},(_,i)=>[...new Set(variants.flatMap(v=>[v.options[i],...(Array.isArray(v.answerAliases?.[i])?v.answerAliases[i]:[v.answerAliases?.[i]])]).filter(Boolean))]);return base});questions=resolved;
  const map=engine.mapping(file,questions,manual),bad=map.some(m=>m.column<0||m.conflict);const time=file.header.findIndex(h=>/^(sygnatura|czas|timestamp|znacznik)/.test(engine.norm(h))),submissionId=file.header.findIndex(h=>/^(submissionid|identyfikator zgłoszenia|id zgłoszenia)$/.test(engine.norm(h)));
@@ -38,5 +61,5 @@ function canonicalCategory(label){const raw=String(label||'').trim(),key=normali
 const categories=r=>{const saved=[...new Set(String(r.category||'').split(/\s*[;|]\s*/).filter(Boolean).map(canonicalCategory))];return saved.length&&(r.categoryManual||r.categoryApproved!==false)?saved:inferredCategories(r.text)};
 function categoryStats(rows,label,survey){const coded=rows.filter(r=>categories(r).length),excluded=new Set(['Nie na temat','Brak odpowiedzi / nie wiem']),substantive=coded.filter(r=>!categories(r).some(c=>excluded.has(c))),baseRows=excluded.has(label)?coded:substantive,selected=baseRows.filter(r=>categories(r).includes(label));return{n:selected.length,base:baseRows.length,pct:baseRows.length?selected.length/baseRows.length*100:null,self:survey.stats(selected,'self')}}
 function rankSchools(meetings,maxPoints=7){const schools=new Map();for(const m of meetings||[]){const q=m.quiz?.[1];if(!m.place||!q?.n)continue;if(!schools.has(m.place))schools.set(m.place,{place:m.place,total:0,n:0,dates:[]});const school=schools.get(m.place);school.total+=Number(q.total)||0;school.n+=Number(q.n)||0;school.dates.push(m.date)}return[...schools.values()].map(s=>({...s,pct:s.total/s.n/maxPoints*100,average:s.total/s.n})).sort((a,b)=>b.pct-a.pct||b.n-a.n||a.place.localeCompare(b.place,'pl'))}
-root.KnowledgeModel={dayKey,score,categories,inferredCategories,canonicalCategory,categoryStats,rankSchools};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
+root.KnowledgeModel={dayKey,workshopSchedule,meetingForDate,score,categories,inferredCategories,canonicalCategory,categoryStats,rankSchools};if(typeof module!=='undefined')module.exports=root.KnowledgeModel;
 })(typeof window==='undefined'?globalThis:window);

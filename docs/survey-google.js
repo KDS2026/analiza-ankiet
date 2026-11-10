@@ -26,8 +26,12 @@
   const parsed=[];
   for(const row of rows.slice(1)){
    if(![ix.time,ix.text,ix.self,ix.others].some(i=>i>=0&&cell(row,i)))continue;
+   const meeting=KnowledgeModel.meetingForDate(cell(row,ix.time));
+   // Automatyczne arkusze zawierają także testy i odpowiedzi wysłane poza dniami warsztatów.
+   // Harmonogram jest źródłem prawdy: takich rekordów nie przypisujemy do fikcyjnych spotkań.
+   if(!meeting)continue;
    const approved=cell(row,ix.approved),automatic=cell(row,ix.automatic);
-   parsed.push({time:cell(row,ix.time),text:cell(row,ix.text),self:cell(row,ix.self),others:cell(row,ix.others),place:cell(row,ix.place)||'Nie podano miejsca',stage:cell(row,ix.stage).toUpperCase()||stage,category:approved||automatic,categoryApproved:!!approved});
+   parsed.push({time:cell(row,ix.time),text:cell(row,ix.text),self:cell(row,ix.self),others:cell(row,ix.others),place:meeting.place,stage:cell(row,ix.stage).toUpperCase()||stage,category:approved||automatic,categoryApproved:!!approved});
   }
   if(!parsed.length)throw Error('Arkusz '+stage+' nie zawiera odpowiedzi do analizy.');
   return{id:'google-survey-'+round,name:'Arkusz Google · chmura '+stage,googleSurvey:true,sheets:[stage],rows:parsed};
@@ -36,10 +40,10 @@
   if(busy)return false;busy=true;const button=$('google-refresh-all'),status=$('google-sync-status');if(button)button.disabled=true;
   if(!silent)status.textContent='Pobieram ankietę PRZED i PO z arkuszy Google…';
   try{
-   const payloads=await Promise.all(rounds.map(([round])=>requestRound(round))),fresh=payloads.map((rows,i)=>sourceFromRows(rows,rounds[i][0],rounds[i][1]));
+   const payloads=await Promise.all(rounds.map(([round])=>requestRound(round))),fresh=payloads.map((rows,i)=>sourceFromRows(rows,rounds[i][0],rounds[i][1])),received=payloads.map(rows=>Math.max(0,rows.length-1)),omitted=received.map((n,i)=>n-fresh[i].rows.length);
    // Automatyczny odczyt jest źródłem nadrzędnym. Zastępuje bieżące ręczne kopie, aby tych samych odpowiedzi nie policzyć dwa razy.
    sources=fresh;
-   refreshSources();status.textContent=`Pobrano chmurę: PRZED ${fresh[0].rows.length} odpowiedzi, PO ${fresh[1].rows.length} odpowiedzi. Odczyt: ${new Date().toLocaleString('pl-PL',{timeZone:'Europe/Warsaw'})}.`;
+   refreshSources();status.textContent=`Pobrano chmurę: PRZED ${fresh[0].rows.length} odpowiedzi, PO ${fresh[1].rows.length} odpowiedzi. Pominięto rekordy z dat spoza harmonogramu: ${omitted[0]} PRZED i ${omitted[1]} PO. Odczyt: ${new Date().toLocaleString('pl-PL',{timeZone:'Europe/Warsaw'})}.`;
    if(typeof saveLocalAnalysis==='function')saveLocalAnalysis();return true;
   }catch(e){status.textContent='Nie udało się odświeżyć chmury. Zachowano dane, które były wcześniej w aplikacji. '+e.message;return false}
   finally{busy=false;if(button)button.disabled=false}

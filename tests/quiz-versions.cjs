@@ -1,4 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),E=require('../docs/quiz-engine.js'),K=require('../docs/knowledge-model.js');
+assert.equal(K.meetingForDate('2026-11-02 09:00').place,'IX Liceum Ogólnokształcące im. Tadeusza Nowakowskiego z Oddziałami Dwujęzycznymi w Bydgoszczy');
+assert.equal(K.meetingForDate('27.10.2026'),null);
+assert.equal(K.meetingForDate('17.10.2026'),null);
 assert.deepEqual(K.inferredCategories('Wszyscy'),['Każdy / wszyscy']);
 assert.deepEqual(K.inferredCategories('Kazdy'),['Każdy / wszyscy']);
 assert.deepEqual(K.inferredCategories('Wszyyscy'),['Każdy / wszyscy']);
