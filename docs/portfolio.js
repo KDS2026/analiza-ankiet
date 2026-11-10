@@ -32,7 +32,7 @@ function aggregateConclusion(meetings){
 }
 
 function aggregateRaw(meetings){if(!meetings.every(m=>m.detail))return null;const rows=meetings.flatMap(m=>m.detail.sources.flatMap(s=>s.rows)),qs=[0,1].map(i=>{const scored=meetings.map(m=>K.score(m.detail.quizFiles[i],Q,QuizEngine,m.detail.quizDates[i],m.detail.quizManual[i]||{}));return{n:scored.reduce((a,s)=>a+s.n,0),counts:Q.map((_,j)=>scored.reduce((a,s)=>a+s.counts[j],0)),hist:Array.from({length:8},(_,j)=>scored.reduce((a,s)=>a+s.hist[j],0)),questions:scored[0]?.questions||Q,bad:scored.some(s=>s.bad),unknown:scored.flatMap(s=>s.unknown)}});return{rows,qs}}
-function aggregateStatsHtml(meetings){const raw=aggregateRaw(meetings);if(!raw)return'<p class="subtle">Pełny opis porównania będzie dostępny po ponownym zapisaniu starszych spotkań z kompletem danych.</p>';return StatTests.reportHtml(StatTests.comparisons(raw.rows,raw.qs))}
+function aggregateStatsHtml(meetings){const raw=aggregateRaw(meetings);if(!raw)return'<p class="subtle">Pełny opis porównania będzie dostępny po ponownym zapisaniu starszych spotkań z kompletem danych.</p>';return StatTests.reportHtml(StatTests.comparisons(raw.rows,raw.qs),raw.rows)}
 
 function aggregateRecommendations(meetings){
  const items=['Przekazać każdej szkole krótkie podsumowanie jej wyników PRZED i PO oraz najważniejsze wnioski z ewaluacji.','Zachęcić nauczycieli do kontynuowania tematu dezinformacji na lekcjach i godzinach wychowawczych.','Przesłać szkołom materiały utrwalające: kroki weryfikacji informacji, przykłady sprawdzania źródeł i pytania, które warto zadać przed udostępnieniem treści.','Przekazać infografiki do gazetki szkolnej oraz do szkolnych kanałów komunikacji, aby uczniowie mogli wracać do najważniejszych zasad.'];

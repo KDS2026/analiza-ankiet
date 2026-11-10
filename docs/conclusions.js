@@ -88,10 +88,9 @@ function renderConclusions(){
   const self=sets.map(s=>M.stats(s,'self'));
   if(quizVersionsMatch(qs)&&availablePair(qs.map(s=>s?.pct??null))&&availablePair(self.map(s=>s.pct))){
    const testDelta=qs[1].pct-qs[0].pct,selfDelta=self[1].pct-self[0].pct;
-   const confidenceProfile=EvaluationInterpretation.confidenceProfile(sets);let relation='Wynik testu i łączny udział pozytywnych samoocen zmieniły się w tym samym kierunku.';
-   if(Math.abs(testDelta)<=1||Math.abs(selfDelta)<=1)relation='Jeden z tych wskaźników pozostał na zbliżonym poziomie.';
-   else if(Math.sign(testDelta)!==Math.sign(selfDelta))relation='Wynik testu i łączny udział pozytywnych samoocen zmieniły się w przeciwnych kierunkach.';if(confidenceProfile?.mixed)relation='Różne wskaźniki samooceny mają odmienne kierunki: wzrósł udział zdecydowanego „tak”, mimo spadku łącznego udziału „tak” i „raczej tak”. Nie opisujemy tego jako ogólnego spadku pewności.';
-   cards.push(['Wspólny obraz',`${relation} Test: ${signed(testDelta)} p.p.; samoocena: ${signed(selfDelta)} p.p. Są to uzupełniające się wyniki ewaluacji tej samej grupy uczestników przed i po warsztatach.`]);
+   const confidenceProfile=EvaluationInterpretation.confidenceProfile(sets);
+   const relation=confidenceProfile?.mixed?'Samoocena ma mieszane kierunki zmian: rośnie udział zdecydowanego „tak”, mimo spadku łącznego udziału „tak” i „raczej tak”.':'Kierunki zmiany wyniku testu i deklaracji samooceny opisujemy oddzielnie.';
+   cards.push(['Wspólny obraz',`${relation} Wynik testu: ${signed(testDelta)} p.p.; łączny udział pozytywnych samoocen: ${signed(selfDelta)} p.p. Zgodność kierunków nie jest automatycznie korzystnym wynikiem ani dowodem adekwatnej pewności. Bez połączenia wyniku testu i samooceny tych samych osób nie da się ocenić trafności samooceny.`]);
   }
  }
  const everyone=sets.map(s=>K.categoryStats(s,'Każdy / wszyscy',M).pct),age=sets.map(s=>K.categoryStats(s,'Wiek',M).pct),confidence=sets.map(s=>M.stats(s,'self').pct);
@@ -99,6 +98,7 @@ function renderConclusions(){
  const linked=(multiLinked||!!$('link-confirm')?.checked&&uniqueSurveyScope()&&quizDates.every(d=>d===K.dayKey(rows[0]?.time)))&&quizVersionsMatch(qs);
  const interpretation=rows.length?EvaluationInterpretation.describe({everyone,age,self:confidence,profile:EvaluationInterpretation.confidenceProfile(sets),test:linked?qs.map(s=>s?.pct??null):null,linked}):[];
  cards.push(...interpretation);
+ if(rows.length){const sensitivity=StatTests.sensitivity(rows);cards.push(['Czy wniosek zależy od wpisów „Nie na temat”?',!sensitivity.complete?'Brak pełnych danych w obu wariantach. Nie rozstrzygamy zgodności kierunków; podstawy i dostępne wyniki podaje analiza wrażliwości.':sensitivity.hasDifference?'Wniosek o kierunku co najmniej jednego wskaźnika zależy od uwzględnienia ankiet z tą kategorią. Wynik podstawowy zachowuje wszystkie odpowiedzi. Dokładne liczby dla obu wariantów pokazuje analiza wrażliwości w części porównawczej.':'Opisowe kierunki badanych wskaźników są takie same w wariancie podstawowym i dodatkowym. Wynik podstawowy zachowuje wszystkie odpowiedzi; szczegóły i podstawy obu wariantów podaje analiza wrażliwości.']);}
  if(!cards.length){dest.innerHTML='<p class="subtle">Wczytaj dane, aby otrzymać ocenę opisową.</p>';return}
  const before=sets[0].length,after=sets[1].length,limits=[];
  if(rows.length)limits.push(`ankieta: ${before} odpowiedzi PRZED i ${after} PO`);
