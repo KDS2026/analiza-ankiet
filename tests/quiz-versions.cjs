@@ -14,6 +14,7 @@ assert.deepEqual(K.categories({text:'Wszyscy niezależnie od wieku czy płci',ca
 assert.deepEqual(K.categories({text:'osoby niezbyt inteligentne',category:'',categoryApproved:false}),['Niska inteligencja']);
 assert.deepEqual(K.categories({text:'Ludzie nieświadomi',category:'',categoryApproved:false}),['Wiedza']);
 assert.deepEqual(K.categories({text:'Ludzie ufni',category:'',categoryApproved:false}),['Łatwowierność / brak sprawdzania']);
+for(const text of ['łatwowierni','łatwo wierni','łatwo-wierni','łatwo werni'])assert.deepEqual(K.categories({text,category:'',categoryApproved:false}),['Łatwowierność / brak sprawdzania']);
 assert.deepEqual(K.categories({text:'Moja babcia',category:'',categoryApproved:false}),['Wiek']);
 assert.deepEqual(K.categories({text:'Nie wiem',category:'',categoryApproved:false}),['Brak odpowiedzi / nie wiem']);
 assert.deepEqual(K.categories({text:'Lewackie qwy',category:'',categoryApproved:false}),['Nie na temat']);

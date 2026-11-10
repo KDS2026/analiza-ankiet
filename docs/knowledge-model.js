@@ -22,7 +22,7 @@ function inferredCategories(text){
  add('Wykształcenie',/wyksztalc|niewyksztalc|edukac/);
  add('Wiedza',/niewiedz|brak wiedzy|niedoinform|niedoeduk|nieuk|nie maja wiedzy|malo wiedza|nie maja pojecia|brak pojecia|nieswiadom|nie swiadom|mala swiadom|nie interesuj|kompetencj.*medial/);
  add('Niska inteligencja',/glup|inteligenc|inteligent|nieinteligent|debil|durn|cymbal|troglodyt|nie maja swojego rozumu|krytyczn.*mysl/);
- add('Łatwowierność / brak sprawdzania',/naiwn|latwowiern|latwo wier|wierza we wszystko|\bufn|nie sprawdz|bez sprawdz|nie weryfik|nie [^,.;]{0,30}weryfik|niesprawdzon|nieuwaz|nie uwaz/);
+ add('Łatwowierność / brak sprawdzania',/naiwn|latwowiern|latwo[\s-]*(?:wier|wiern|wern)|wierza we wszystko|\bufn|nie sprawdz|bez sprawdz|nie weryfik|nie [^,.;]{0,30}weryfik|niesprawdzon|nieuwaz|nie uwaz/);
  add('Emocje i strach',/emocj|strach|boja|przestrasz|panik|impulsyw/);
  add('Pośpiech / zmęczenie / stres',/pospiech|spiesza|na szybko|zmecz|stres/);
  add('Otoczenie i źródła informacji',/internet|social media|media spolecz|telewiz|facebook|tiktok|tvn|republik|\bai\b|otoczen|zrod(la|lo|el)|algorytm/);
