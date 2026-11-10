@@ -42,7 +42,7 @@ window.WorkshopEvaluation=(()=>{
  }
 
  function refresh(){
-  if(timer)clearTimeout(timer);request=crypto.randomUUID();const id=request;loading=true;error='';render();const script=document.createElement('script');script.src=API+'?'+new URLSearchParams({action:'evaluationData',request:id,t:Date.now()});
+  if(timer)clearTimeout(timer);request=crypto.randomUUID();const id=request;loading=true;error='';render();const script=document.createElement('script');script.crossOrigin='anonymous';script.src=API+'?'+new URLSearchParams({action:'evaluationData',request:id,t:Date.now()});
   const fail=()=>{if(request!==id)return;loading=false;error='Nie udało się odświeżyć ocen zajęć. Ponowna próba za minutę; możesz też użyć przycisku odświeżania.';render()};
   script.onerror=()=>{script.remove();fail()};script.onload=()=>script.remove();document.body.append(script);timer=setTimeout(()=>{script.remove();if(loading)fail()},25000);
  }

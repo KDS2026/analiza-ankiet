@@ -10,7 +10,7 @@
    const finish=(error,value)=>{clearTimeout(timer);pending.delete(request);script.remove();error?reject(error):resolve(value)};
    const timer=setTimeout(()=>finish(Error('Arkusz '+round.toUpperCase()+' nie odpowiedział w ciągu 25 sekund.')),25000);
    pending.set(request,{round,finish});script.onerror=()=>finish(Error('Nie udało się połączyć z arkuszem '+round.toUpperCase()+'.'));
-   script.src=API+'?action=data&round='+round+'&request='+encodeURIComponent(request)+'&t='+Date.now();
+   script.crossOrigin='anonymous';script.src=API+'?action=data&round='+round+'&request='+encodeURIComponent(request)+'&t='+Date.now();
    document.head.appendChild(script);
   });
  }
